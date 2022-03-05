@@ -26,6 +26,8 @@ const log = (socket, message) => {
   console.log(`${CONSOLE_COLORS.FgMagenta}${new Date().toISOString()}:${CONSOLE_COLORS.FgYellow}[${socket.id}]${CONSOLE_COLORS.Reset} - ${message}`);
 };
 
+const clientsConnected = {};
+
 function handleLoginAttempt(socket, {username, password}) {
   const allowedUsers = process.env.ALLOWED_USERS.split(",");
   if (!username || !password || !allowedUsers.includes(username)) {
@@ -50,10 +52,13 @@ function handleLoginAttempt(socket, {username, password}) {
 
 io.on("connection", (socket) => {
   log(socket, "new client connected");
+  clientsConnected[socket.id] = socket;
   socket.on('login-attempt', (data) => handleLoginAttempt(socket, data));
   socket.on("disconnect", () => {
     log(socket, "client disconnected");
+    delete clientsConnected[socket.id];
   });
+  log({id: 'server'}, `total clients connected: ${Object.keys(clientsConnected).length}`);
 });
 
 server.listen(port, () => log({id: 'server'}, `listening on port ${port}`));

@@ -4,8 +4,13 @@ import withReactContent from 'sweetalert2-react-content';
 
 const SERVER_ENDPOINT = `${process.env.REACT_APP_SERVER_URL}:${process.env.REACT_APP_SERVER_PORT}`;
 
+let socket = null;
+
 export function createSocket() {
-  return socketIOClient(SERVER_ENDPOINT);
+  if (socket === null) {
+    socket = socketIOClient(SERVER_ENDPOINT);
+  }
+  return socket;
 };
 
 export function isUserLoggedIn() {
@@ -14,7 +19,7 @@ export function isUserLoggedIn() {
   if (!user || !expires) {
     return false;
   }
-  if (new Date(expires) < new Date()) {
+  if (new Date(Number(expires)) < new Date()) {
     return false;
   }
   return true;
