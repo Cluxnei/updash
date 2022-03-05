@@ -24,7 +24,48 @@ function closeConnection() {
     }
 }
 
+function _escape(value) {
+    return getConnection().escape(value);
+}
+
+function _query(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        getConnection().query(sql, params.map(_escape), (err, rows) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows);
+            }
+        });
+    });
+}
+
+function _select(fields, table, where = null, params = []) {
+    const sql = `SELECT ${fields} FROM ${table}${where ? (' WHERE ' + where) : ''}`;
+    return _query(sql, params);
+}
+
+function _insert(table, fields, values) {
+    const sql = `INSERT INTO ${table} (${fields}) VALUES (${values})`;
+    return _query(sql);
+}
+
+function _update(table, fields, values, where = null, params = []) {
+    const sql = `UPDATE ${table} SET ${fields}${where ? (' WHERE ' + where) : ''}`;
+    return _query(sql, params);
+}
+
+function _delete(table, where = null, params = []) {
+    const sql = `DELETE FROM ${table}${where ? (' WHERE ' + where) : ''}`;
+    return _query(sql, params);
+}
+
 module.exports = {
     getConnection,
     closeConnection,
+    _query,
+    _select,
+    _insert,
+    _update,
+    _delete,
 };
