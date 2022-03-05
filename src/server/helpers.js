@@ -25,6 +25,11 @@ const CONSOLE_COLORS = {
     'BgWhite': "\x1b[47m",
 };
 
+function log(entity, message) {
+    console.log(`${CONSOLE_COLORS.FgMagenta}${new Date().toISOString()}:${CONSOLE_COLORS.FgYellow}[${entity.id}]${CONSOLE_COLORS.Reset} - ${message}`);
+};
+
 module.exports = {
     CONSOLE_COLORS,
+    log,
 };
