@@ -1,0 +1,79 @@
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.monitors-list {
+    height: 80vh;
+    overflow-y: auto;
+}
+
+.monitor-list-item {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 0.5rem;
+}
+
+.monitor-up-time-percentage {
+    border-radius: 15px;
+}
+
+.monitor-up-time-percentage span {
+    padding: 0 1rem;
+    font-size: smaller;
+}
+
+.monitor-name-and-tags-container {
+    display: flex;
+    flex-direction: column;
+    margin-left: 15px;
+    flex: 1;
+}
+
+.monitor-name {
+    color: gray;
+    font-size: medium;
+}
+
+.monitor-tags {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-top: 5px;
+}
+
+.monitor-tag {
+    border-radius: 15px;
+    padding: 0 0.5rem;
+    color: white;
+    font-size: smaller;
+    margin-left: 5px;
+}
+
+.monitor-heartbeats {
+    margin-left: 15px;
+    display: flex;
+    flex-direction: row;
+}
+
+.monitor-heartbeat {
+    width: 8px;
+    height: 25px;
+    border-radius: 15px;
+    position: relative;
+    display: block;
+    margin-left: 5px;
+}
