@@ -25,11 +25,16 @@ const CONSOLE_COLORS = {
     'BgWhite': "\x1b[47m",
 };
 
-function log(entity, message) {
-    console.log(`${CONSOLE_COLORS.FgMagenta}${new Date().toISOString()}:${CONSOLE_COLORS.FgYellow}[${entity.id}]${CONSOLE_COLORS.Reset} - ${message}`);
+function randomColor() {
+    return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+}
+
+function log(entity, message, ...messages) {
+    console.log(`${CONSOLE_COLORS.FgMagenta}${new Date().toISOString()}:${CONSOLE_COLORS.FgYellow}[${entity.id}]${CONSOLE_COLORS.Reset} -`, message, ...messages);
 };
 
 module.exports = {
     CONSOLE_COLORS,
     log,
+    randomColor,
 };

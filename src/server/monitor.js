@@ -1,92 +1,42 @@
-const monitors = [];
+const { _select } = require("./database/connection");
+const { log } = require("./helpers");
 
-function randomColor() {
-    return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-}
-
-function monitorTagFactory(id = null) {
-    const _id = id || Math.random().toString(36).substring(2, 5) + Math.random().toString(36).substring(2, 5);
+function monitorFactory(max_heart_beat_interval = 60) {
     return {
-        id: _id,
-        name: `Tag ${_id}`,
-        color: randomColor(),
+        name: 'Monitor name',
+        url: `${process.env.SERVER_URL}:${process.env.SERVER_PORT}`,
+        heart_beat_interval: Math.max(10, Math.floor(Math.random() * max_heart_beat_interval)), 
     };
 }
 
-function fixHeartbeatLength(heartbeats) {
-    const FIXED_HEART_BEATS = 11;
-    if (heartbeats.length > FIXED_HEART_BEATS) {
-        return heartbeats;
-    }
-    const numberOfEmptyHeartbeats = FIXED_HEART_BEATS - heartbeats.length;
-    const emptyHeartbeats = [];
-    for (let i = 0; i < numberOfEmptyHeartbeats; i++) {
-        emptyHeartbeats.push({
-            id: 'empty',
-            status: 'none',
-            color: 'gray',
-            responseTime: null,
+async function fillMonitorData(monitor) {
+    return monitor;
+}
+
+async function fillMonitorsData(monitors) {
+    const promises = [];
+    monitors.forEach((monitor, index) => {
+        const promise = fillMonitorData(monitor).then(filledMonitor => {
+            monitors[index] = filledMonitor;
         });
-    }
-    return [...emptyHeartbeats, ...heartbeats];
-}
-
-function monitorHeartbeatFactory(id = null) {
-    const _id = id || Math.random().toString(36).substring(2, 5) + Math.random().toString(36).substring(2, 5);
-    const status = Math.random() > 0.5 ? "up" : "down";
-    return {
-        id: _id,
-        status,
-        color: status === "up" ? "green" : "red",
-        responseTime: Math.random() * 472,
-    };
-}
-
-function monitorFactory(id = null) {
-    const _id = id || Math.random().toString(36).substring(2, 5) + Math.random().toString(36).substring(2, 5);
-    const status = Math.random() > 0.5 ? "up" : "down";
-    const tags = [];
-    const numberOfTags = Math.random() < 0.5 ? 0 : Math.floor(Math.random() * 5);
-    for (let i = 0; i < numberOfTags; i++) {
-        tags.push(monitorTagFactory(i));
-    }
-    const heartbeats = [];
-    const numberOfHeartbeats = Math.random() < 0.5 ? 0 : Math.floor(Math.random() * 15);
-    for (let i = 0; i < numberOfHeartbeats; i++) {
-        heartbeats.push(monitorHeartbeatFactory(i));
-    }
-    return {
-        id: _id,
-        name: `Monitor ${_id}`,
-        description: `This is monitor ${_id} description`,
-        status,
-        upTimePercentage: Math.random() * 100,
-        uptimeColor: status === "up" ? "green" : "red",
-        tags,
-        heartbeats: fixHeartbeatLength(heartbeats),
-    };
-}
-
-function getMockedMonitors() {
-    const mockedMonitors = [];
-    const numberOfMockedMonitors = Math.floor(Math.random() * 100);
-    for (let i = 0; i < numberOfMockedMonitors; i++) {
-        mockedMonitors.push(monitorFactory());
-    }
-    return mockedMonitors;
+        promises.push(promise);
+    });
+    await Promise.all(promises);
+    return monitors;
 }
 
 async function getMonitors() {
-
+    const monitors = await _select(['*'], 'monitors');
+    log({id: 'monitor.js'}, `Got ${monitors.length} monitors`);
+    return fillMonitorsData(monitors);
 }
 
-function handleGetMonitors(socket, _) {
-    socket.emit('monitors-list', getMockedMonitors());
+async function handleGetMonitors(socket, _) {
+    socket.emit('monitors-list', await getMonitors());
 }
 
 module.exports = {
-    monitors,
-    getMockedMonitors,
+    monitorFactory,
     getMonitors,
     handleGetMonitors,
 };
