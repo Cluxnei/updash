@@ -43,8 +43,8 @@ export default function Dashboard() {
                                     monitors.map((monitor, monitorIndex) => {
                                         return (
                                             <div className="col-md-12 monitor-list-item" key={`${monitor.id}-${monitorIndex}`}>
-                                                <div className="monitor-up-time-percentage" style={{backgroundColor: monitor.uptimeColor}}>
-                                                    <span>{monitor.upTimePercentage.toFixed(2)}%</span>
+                                                <div className="monitor-up-time-percentage" style={{backgroundColor: monitor.uptime_color}}>
+                                                    <span>{monitor.uptime_percentage.toFixed(2)}%</span>
                                                 </div>
                                                 <div className="monitor-name-and-tags-container">
                                                     <div className="monitor-name">

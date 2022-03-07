@@ -1,6 +1,8 @@
 const { _select } = require("./database/connection");
 const { log } = require("./helpers");
 
+const MINIMUM_HEARTBEATS_COUNT = 10;
+
 function monitorFactory(max_heart_beat_interval = 60) {
     return {
         name: 'Monitor name',
@@ -9,7 +11,41 @@ function monitorFactory(max_heart_beat_interval = 60) {
     };
 }
 
+function fillHeartbeatsData(heartbeats) {
+    const mapper = heartbeat => {
+        if (heartbeat.isEmpty) {
+            return heartbeat;
+        }
+        heartbeat.color = 'green';
+        return heartbeat;
+    };
+    if (heartbeats.length < MINIMUM_HEARTBEATS_COUNT) {
+        const emptyHeartbeatsToCreate = MINIMUM_HEARTBEATS_COUNT - heartbeats.length;
+        const emptyHeartbeats = [];
+        for (let i = 0; i < emptyHeartbeatsToCreate; i++) {
+            emptyHeartbeats.push({
+                isEmpty: true,
+                color: 'gray',
+            });
+        }
+        return [...emptyHeartbeats, ...heartbeats].map(mapper);	
+    }
+    return heartbeats.map(mapper);
+}
+
+function fillTagsData(tags) {
+    return tags;
+}
+
 async function fillMonitorData(monitor) {
+    const [heartbeats, tags] = await Promise.all([
+        _select(['*'], 'monitor_heart_beats', `monitor_id = ?`, [monitor.id], 'created_at DESC'),
+        _select(['*'], 'monitor_tags', `monitor_id = ?`, [monitor.id]),
+    ]);
+    monitor.tags = fillTagsData(tags);
+    monitor.heartbeats = fillHeartbeatsData(heartbeats);
+    monitor.uptime_color = 'green';
+    monitor.uptime_percentage = 100;
     return monitor;
 }
 
