@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createSocket, isUserLoggedIn } from "../../helpers";
 import './style.css';
 
@@ -20,8 +20,27 @@ export default function Dashboard() {
         socket.on('monitors-list', (data) => {
             setMonitors(data);
         });
+
     }, []);
 
+    useEffect(() => {
+        const call = (data) => {
+            const monitorIndex = monitors.findIndex(monitor => monitor.id === data.monitor_id);
+            if (monitorIndex === -1) {
+                return;
+            }
+            setMonitors(oldMonitors => {
+                oldMonitors[monitorIndex] = data.monitor;
+                return [...oldMonitors];
+            });
+        };
+        socket.on('monitor-runned', call);
+        return () => {
+            socket.off('monitor-runned', call);
+        };
+    }, [monitors]);
+
+    
     return (
         <div className="container-fluid">
             <div className="row">

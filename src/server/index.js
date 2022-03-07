@@ -6,9 +6,10 @@ require("dotenv").config();
 
 const port = process.env.SERVER_PORT || 4001;
 const index = require("./routes/index");
-const { log } = require("./helpers");
+const { log, delay } = require("./helpers");
 const { closeConnection } = require("./database/connection");
 const { socketRoutes } = require("./socket");
+const { handleMonitorsThread } = require("./monitor");
 
 const app = express();
 app.use(cors());
@@ -36,10 +37,33 @@ io.on("connection", (socket) => {
   log({id: 'server'}, `total clients connected: ${Object.keys(clientsConnected).length}`);
 });
 
+let mainMonitorsThreadShouldRun = true;
+let elapsedTimeInSeconds = 0;
+
+async function mainMonitorsThread() {
+  log({id: 'main-monitors-thread'}, "main monitors thread start");
+  await handleMonitorsThread(io, elapsedTimeInSeconds);
+  log({id: 'main-monitors-thread'}, "main monitors thread done");
+  await delay(1000);
+  elapsedTimeInSeconds++;
+  if (mainMonitorsThreadShouldRun) {
+    mainMonitorsThread();
+  }
+}
+
+if (mainMonitorsThreadShouldRun) {
+  log({id: 'server'}, "main monitors first thread started");
+  mainMonitorsThread().then(() => {
+    log({id: 'server'}, "main monitors first thread ended");
+  });
+}
+
 server.listen(port, () => log({id: 'server'}, `listening on port ${port}`));
 
 function gracefulShutdown() {
   log({id: 'server'}, "graceful shutdown");
+  log({id: 'graceful-shutdown'}, "stopping main monitors thread");
+  mainMonitorsThreadShouldRun = false;
   log({id: 'graceful-shutdown'}, "closing database connection");
   closeConnection();
   log({id: 'graceful-shutdown'}, "database connection closed");

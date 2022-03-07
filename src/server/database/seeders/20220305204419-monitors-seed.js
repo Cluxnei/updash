@@ -6,7 +6,7 @@ const { monitorFactory } = require("../../monitor");
 module.exports = {
   async up(queryInterface) {
 
-    const numberToInset = 100;
+    const numberToInset = 1;
 
     const monitors = [];
 

@@ -26,7 +26,7 @@ function closeConnection() {
 }
 
 function _escape(value) {
-    return getConnection().escape(value);
+    return value;
 }
 
 function _query(sql, params = []) {
@@ -47,9 +47,9 @@ function _select(fields, table, where = null, params = [], orderBy = null, limit
     return _query(sql, params ? params : []);
 }
 
-function _insert(table, fields, values) {
-    const sql = `INSERT INTO ${table} (${fields}) VALUES (${values})`;
-    return _query(sql);
+function _insert(table, object) {
+    const sql = `INSERT INTO ${table} (${Object.keys(object).join(',')}) VALUES (${Object.keys(object).map(() => '?').join(',')})`;
+    return _query(sql, Object.values(object));
 }
 
 function _insert_many(table, fields, values) {
@@ -57,9 +57,9 @@ function _insert_many(table, fields, values) {
     return _query(sql);
 }
 
-function _update(table, fields, values, where = null, params = []) {
-    const sql = `UPDATE ${table} SET ${fields}${where ? (' WHERE ' + where) : ''}`;
-    return _query(sql, params);
+function _update(table, object, where = null, params = []) {
+    const sql = `UPDATE ${table} SET ${Object.keys(object).map(k => k + '= ?').join(',')}${where ? (' WHERE ' + where) : ''}`;
+    return _query(sql, [...Object.values(object), ...params]);
 }
 
 function _delete(table, where = null, params = []) {

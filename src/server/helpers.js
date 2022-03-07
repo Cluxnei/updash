@@ -33,8 +33,25 @@ function log(entity, message, ...messages) {
     console.log(`${CONSOLE_COLORS.FgMagenta}${new Date().toISOString()}:${CONSOLE_COLORS.FgYellow}[${entity.id}]${CONSOLE_COLORS.Reset} -`, message, ...messages);
 };
 
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function currentTimestamp() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+    const second = date.getSeconds();
+    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`;
+}
+
 module.exports = {
     CONSOLE_COLORS,
     log,
     randomColor,
+    delay,
+    currentTimestamp,
 };
