@@ -9,6 +9,11 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
       },
+      is_paused: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
       name: {
         type: Sequelize.STRING,
         allowNull: false,

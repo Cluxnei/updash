@@ -29,10 +29,6 @@ function randomColor() {
     return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
 }
 
-function randomName() {
-    return `${Math.floor(Math.random() * 100).toString(16)}`;
-}
-
 function log(entity, message, ...messages) {
     console.log(`${CONSOLE_COLORS.FgMagenta}${new Date().toISOString()}:${CONSOLE_COLORS.FgYellow}[${entity.id}]${CONSOLE_COLORS.Reset} -`, message, ...messages);
 };
@@ -66,5 +62,4 @@ module.exports = {
     delay,
     currentTimestamp,
     isToday,
-    randomName,
 };

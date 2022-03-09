@@ -1,15 +1,40 @@
 const { default: axios } = require("axios");
 const { _select, _insert, _update, _query } = require("./database/connection");
-const { log, currentTimestamp, isToday, randomName } = require("./helpers");
+const { log, currentTimestamp, isToday } = require("./helpers");
 
 const MINIMUM_HEARTBEATS_COUNT = 10;
 const FIXED_MONITOR_TIMEOUT = 2000;
 const HEART_BEATS_LIMIT = 100;
 
 function monitorFactory(max_heart_beat_interval = 60) {
+    const randomUrls = [
+        'https://www.google.com',
+        'https://www.youtube.com',
+        'https://www.facebook.com',
+        'https://www.instagram.com',
+        'https://www.twitter.com',
+        'https://www.github.com',
+        'https://www.linkedin.com',
+        'https://www.pinterest.com',
+        'https://www.reddit.com',
+        'https://www.quora.com',
+        'https://www.wikipedia.org',
+        'https://www.amazon.com',
+        'https://www.ebay.com',
+        'https://www.twitch.tv',
+        'https://www.netflix.com',
+        'https://www.imdb.com',
+        'https://www.spotify.com',        
+        `${process.env.SERVER_URL}:${process.env.SERVER_PORT}`,
+    ];
+    const url = randomUrls[Math.floor(Math.random() * randomUrls.length)];
+    let name = url.split('://')[1].split('.')[0];
+    if (url.includes('www')) {
+        name = url.split('www.')[1].split('.')[0];
+    }
     return {
-        name: 'Monitor ' + randomName(),
-        url: `${process.env.SERVER_URL}:${process.env.SERVER_PORT}`,
+        name,
+        url,
         heart_beat_interval: Math.max(10, Math.floor(Math.random() * max_heart_beat_interval)),
     };
 }
@@ -136,6 +161,22 @@ async function handleGetMonitors(socket, _) {
     socket.emit('monitors-list', await getMonitors());
 }
 
+async function handlePauseMonitor(socket, monitorId) {
+    await _update('monitors', {is_paused: 1, updated_at: currentTimestamp()}, 'id = ?', [monitorId]);
+    socket.emit('monitor-paused', {
+        id: monitorId,
+        is_paused: true,
+    });
+}
+
+async function handleResumeMonitor(socket, monitorId) {
+    await _update('monitors', {is_paused: 0, updated_at: currentTimestamp()}, 'id = ?', [monitorId]);
+    socket.emit('monitor-resumed', {
+        id: monitorId,
+        is_paused: false,
+    });
+}
+
 async function computeMonitorStatus(monitor) {
     const lastHeartbeats = await _select(['is_failed'], 'monitor_heart_beats', `monitor_id = ?`, [monitor.id], 'created_at DESC', monitor.min_fail_attemps_to_down);
     const lastHeartbeatsFailed = lastHeartbeats.filter(heartbeat => heartbeat.is_failed);
@@ -204,7 +245,7 @@ async function handleMonitorsThread(broadcastSocket) {
         'UNIX_TIMESTAMP(CURRENT_TIMESTAMP) - UNIX_TIMESTAMP(runned_at) as runned_seconds_ago'
     ],
         'monitors',
-        `runned_at IS NULL OR (UNIX_TIMESTAMP(CURRENT_TIMESTAMP) - UNIX_TIMESTAMP(runned_at)) >= heart_beat_interval`
+        `is_paused = 0 AND (runned_at IS NULL OR (UNIX_TIMESTAMP(CURRENT_TIMESTAMP) - UNIX_TIMESTAMP(runned_at)) >= heart_beat_interval)`
     );
     log({ id: 'monitor.js' }, `Got ${monitorsToRun.length} monitors to run`, monitorsToRun);
     const promises = [];
@@ -219,5 +260,7 @@ module.exports = {
     getMonitors,
     handleGetMonitors,
     handleMonitorsThread,
+    handlePauseMonitor,
+    handleResumeMonitor,
 };
 

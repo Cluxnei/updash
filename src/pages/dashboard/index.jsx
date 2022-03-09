@@ -80,6 +80,31 @@ export default function Dashboard() {
             }
         });
 
+        const pauseOrResumeMonitorCallback = (data) => {
+            console.log(data);
+            const _monitorIndex = monitors.findIndex(_monitor => _monitor.id === data.id);
+            if (_monitorIndex === -1) {
+                return;
+            }
+            if (monitor.id === data.id) {
+                setMonitor((oldMonitor) => ({
+                    ...oldMonitor,
+                    is_paused: data.is_paused,
+                }));
+            }
+            setMonitors((oldMonitors) => {
+                const _monitors = [...oldMonitors];
+                _monitors[_monitorIndex] = {
+                    ...oldMonitors[_monitorIndex],
+                    is_paused: data.is_paused,
+                };
+                return _monitors;
+            });
+        };
+
+        socket.on('monitor-paused', pauseOrResumeMonitorCallback);
+        socket.on('monitor-resumed', pauseOrResumeMonitorCallback);
+
     }, []);
 
     useEffect(() => {
@@ -108,6 +133,14 @@ export default function Dashboard() {
 
     function handleMonitorClick(_monitor) {
         setMonitor(_monitor);
+    }
+
+    function handlePauseMonitor() {
+        if (monitor.is_paused) {
+            socket.emit('resume-monitor', monitor.id);
+            return;
+        }
+        socket.emit('pause-monitor', monitor.id);
     }
 
     useEffect(() => {
@@ -217,7 +250,9 @@ export default function Dashboard() {
                     <a className="monitor-url" href={monitor.url} target="_blank" rel="noreferrer">{monitor.url}</a>
 
                     <div className="mt-3 monitor-buttons">
-                        <button className="monitor-btn btn btn-primary">Pause</button>
+                        <button className="monitor-btn btn btn-primary" onClick={handlePauseMonitor}>
+                            {monitor.is_paused ? 'resume' : 'pause'}
+                        </button>
                         <button className="monitor-btn btn btn-secondary">Edit</button>
                         <button className="monitor-btn btn btn-danger">Delete</button>
                         {monitor.tags.length && (
@@ -285,7 +320,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
-                    {failuresChartData.labels.length && (
+                    {failuresChartData.labels.length ? (
                         <div className="card bg-dark text-white mt-3">
                             <div className="card-body">
                                 <div className="row">
@@ -295,8 +330,8 @@ export default function Dashboard() {
                                 </div>
                             </div>
                         </div>
-                    )}
-                    {assertionsChartData.labels.length && (
+                    ) : null}
+                    {assertionsChartData.labels.length ? (
                         <div className="card bg-dark text-white mt-3">
                             <div className="card-body">
                                 <div className="row">
@@ -306,7 +341,7 @@ export default function Dashboard() {
                                 </div>
                             </div>
                         </div>
-                    )}
+                    ) : null}
                 </div>
             </div>
         </div>
