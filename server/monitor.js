@@ -5,6 +5,7 @@ const { log, currentTimestamp, isToday } = require("./helpers");
 const MINIMUM_HEARTBEATS_COUNT = 10;
 const FIXED_MONITOR_TIMEOUT = 2000;
 const MINIMUM_UPTIME_PERCENTAGE_TO_GREEN = 95;
+const HEART_BEATS_LIMIT = 100;
 
 function monitorFactory(max_heart_beat_interval = 60) {
     return {
@@ -21,7 +22,7 @@ function fillHeartbeatsData(heartbeats) {
         }
         heartbeat.color = heartbeat.is_failed ? 'red' : 'green';
         const time = new Date(heartbeat.created_at);
-        const day = isToday(time) ? 'hj' : `${time.getDate()}/${time.getMonth() + 1}/${time.getFullYear().toString().substring(2)}`;
+        const day = isToday(time) ? 'today' : `${time.getDate()}/${time.getMonth() + 1}/${time.getFullYear().toString().substring(2)}`;
         heartbeat.label_time = `${day} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
         return heartbeat;
     };
@@ -44,8 +45,8 @@ function fillTagsData(tags) {
 }
 
 async function fillMonitorData(monitor) {
-    const [heartbeats, tags, [{uptime_percentage}]] = await Promise.all([
-        _select(['*'], 'monitor_heart_beats', `monitor_id = ?`, [monitor.id], 'created_at DESC'),
+    const [heartbeats, tags, [{uptime_percentage}], [{response_time_avg_all_time}]] = await Promise.all([
+        _select(['*'], 'monitor_heart_beats', `monitor_id = ?`, [monitor.id], 'created_at DESC', HEART_BEATS_LIMIT),
         _select(['*'], 'monitor_tags', `monitor_id = ?`, [monitor.id]),
         _query(
             `SELECT (
@@ -57,13 +58,14 @@ async function fillMonitorData(monitor) {
             ) as uptime_percentage`,
             [monitor.id, monitor.id]
         ),
+        _select(['AVG(response_time) as response_time_avg_all_time'], 'monitor_heart_beats', 'monitor_id = ?', [monitor.id]),
     ]);
     monitor.tags = fillTagsData(tags);
     monitor.heartbeats = fillHeartbeatsData(heartbeats);
     monitor.response_times = {
         current: heartbeats[0]?.response_time,
         avg: {
-            all_time: heartbeats.reduce((acc, heartbeat) => acc + heartbeat.response_time, 0) / heartbeats.length,
+            all_time: response_time_avg_all_time,
         },
         uptime: {
             all_time: uptime_percentage,
@@ -95,6 +97,15 @@ async function getMonitors() {
 
 async function handleGetMonitors(socket, _) {
     socket.emit('monitors-list', await getMonitors());
+}
+
+async function computeMonitorStatus(monitor) {
+    const lastHeartbeats = await _select(['is_failed'], 'monitor_heart_beats', `monitor_id = ?`, [monitor.id], 'created_at DESC', monitor.min_fail_attemps_to_down);
+    const lastHeartbeatsFailed = lastHeartbeats.filter(heartbeat => heartbeat.is_failed);
+    if (lastHeartbeatsFailed.length === monitor.min_fail_attemps_to_down) {
+        return 'down';
+    }
+    return 'up';
 }
 
 async function runMonitor(broadcastSocket,  monitor) {
@@ -138,8 +149,9 @@ async function runMonitor(broadcastSocket,  monitor) {
         }
         throw err;
     } finally {
+        const status = await computeMonitorStatus(monitor);
         const timestamp = currentTimestamp();
-        await _update('monitors', {runned_at: timestamp, updated_at: timestamp}, 'id = ?', [monitor.id]);
+        await _update('monitors', {runned_at: timestamp, updated_at: timestamp, status}, 'id = ?', [monitor.id]);
         monitor.runned_at = timestamp;
         monitor.updated_at = timestamp;
         broadcastSocket.emit('monitor-runned', {
