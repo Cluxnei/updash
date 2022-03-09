@@ -173,7 +173,7 @@ export default function Dashboard() {
                                             <button onClick={() => handleMonitorClick(_monitor)} className="col-md-12 monitor-list-item" key={`${_monitor.id}-${monitorIndex}`}>
                                                 <div className="monitor-up-time-percentage" style={{ 
                                                     backgroundColor: _monitor.uptime_color,
-                                                    color: _monitor.uptime_percentage_text_color
+                                                    color: _monitor.response_times.uptime.all_time_text_color
                                                     }}
                                                 >
                                                     <span>{_monitor.uptime_percentage.toFixed(2)}%</span>
@@ -214,11 +214,27 @@ export default function Dashboard() {
                 <div className="col-md-8 view-monitor">
                     <span className="monitor-name">{monitor.name}</span>
                     <br />
-                    <a className="monitor-url" href="{monitor.url}" target="_blank">{monitor.url}</a>
+                    <a className="monitor-url" href={monitor.url} target="_blank" rel="noreferrer">{monitor.url}</a>
+
                     <div className="mt-3 monitor-buttons">
                         <button className="monitor-btn btn btn-primary">Pause</button>
                         <button className="monitor-btn btn btn-secondary">Edit</button>
                         <button className="monitor-btn btn btn-danger">Delete</button>
+                        {monitor.tags.length && (
+                            <div className="card bg-dark">
+                                <div className="card-body p-2">
+                                    {monitor.tags.map((tag, tagIndex) => (
+                                        <span
+                                            key={`big-${tag.id}-${tagIndex}`}
+                                            style={{ backgroundColor: tag.color }}
+                                            className="monitor-tag"
+                                        >
+                                            {tag.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <div className="card bg-dark text-white mt-3">
                         <div className="card-body">
@@ -240,26 +256,31 @@ export default function Dashboard() {
                     <div className="card bg-dark text-white mt-3">
                         <div className="card-body">
                             <div className="row">
-                                <div className="col-md-3 monitor-counters">
+                                <div className="col-md-3 col-sm-6 monitor-counters">
                                     <span className="title">Response</span>
                                     <span className="subtitle">(Current)</span>
                                     <span className="value">{monitor.response_times.current} ms</span>
 
                                 </div>
-                                <div className="col-md-3 monitor-counters">
+                                <div className="col-md-3 col-sm-6 monitor-counters">
                                     <span className="title">Avg Response</span>
                                     <span className="subtitle">(all-time)</span>
                                     <span className="value">{monitor.response_times.avg.all_time.toFixed(2)} ms</span>
                                 </div>
-                                <div className="col-md-3 monitor-counters">
+                                <div className="col-md-2 col-sm-6 monitor-counters">
                                     <span className="title">Avg Response</span>
                                     <span className="subtitle">(last-24-hours)</span>
                                     <span className="value">{monitor.response_times.avg.last_24_hours.toFixed(2)} ms</span>
                                 </div>
-                                <div className="col-md-3 monitor-counters">
+                                <div className="col-md-2 col-sm-6 monitor-counters">
                                     <span className="title">Uptime</span>
                                     <span className="subtitle">(all-time)</span>
-                                    <span className="value" style={{color: monitor.uptime_percentage_text_color}}>{monitor.response_times.uptime.all_time.toFixed(2)}%</span>
+                                    <span className="value" style={{color: monitor.response_times.uptime.all_time_text_color}}>{monitor.response_times.uptime.all_time.toFixed(2)}%</span>
+                                </div>
+                                <div className="col-md-2 col-sm-6 monitor-counters">
+                                    <span className="title">Uptime</span>
+                                    <span className="subtitle">(last-24-hours)</span>
+                                    <span className="value" style={{color: monitor.response_times.uptime.last_24_hours_text_color}}>{monitor.response_times.uptime.last_24_hours.toFixed(2)}%</span>
                                 </div>
                             </div>
                         </div>

@@ -43,11 +43,28 @@ function fillTagsData(tags) {
     return tags;
 }
 
+function uptimeColorByPercentage(uptime_percentage) {
+    if (uptime_percentage >= 98) {
+        return'white';
+    }
+    if (uptime_percentage >= 90) {
+        return'yellow';
+    }
+    if (uptime_percentage >= 80) {
+        return'orange';
+    } 
+    if (uptime_percentage >= 70) {
+        return'red';
+    }
+    return'black';
+}
+
 async function fillMonitorData(monitor) {
     const [
         heartbeats,
         tags, 
         [{uptime_percentage}], 
+        [{uptime_percentage_last_24_hours}], 
         [{response_time_avg_all_time}],
         [{response_time_avg_last_24_hours}],
     ] = await Promise.all([
@@ -63,6 +80,16 @@ async function fillMonitorData(monitor) {
             ) as uptime_percentage`,
             [monitor.id, monitor.id]
         ),
+        _query(
+            `SELECT (
+                (
+                    (SELECT COUNT(id) FROM monitor_heart_beats WHERE monitor_id = ? AND is_failed = 0 AND created_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 24 hour))
+                    /
+                    (SELECT COUNT(id) FROM monitor_heart_beats WHERE monitor_id = ? AND created_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 24 hour))
+                ) * 100
+            ) as uptime_percentage_last_24_hours`,
+            [monitor.id, monitor.id]
+        ),
         _select(['AVG(response_time) as response_time_avg_all_time'], 'monitor_heart_beats', 'monitor_id = ?', [monitor.id]),
         _select(['AVG(response_time) as response_time_avg_last_24_hours'], 'monitor_heart_beats', 'monitor_id = ? AND created_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 24 hour)', [monitor.id]),
     ]);
@@ -76,21 +103,12 @@ async function fillMonitorData(monitor) {
         },
         uptime: {
             all_time: uptime_percentage,
+            all_time_text_color: uptimeColorByPercentage(uptime_percentage),
+            last_24_hours: uptime_percentage_last_24_hours,
+            last_24_hours_text_color: uptimeColorByPercentage(uptime_percentage_last_24_hours),
         },
     };
     monitor.uptime_percentage = uptime_percentage;
-    monitor.uptime_percentage_text_color = 'white';
-    if (monitor.uptime_percentage >= 98) {
-        monitor.uptime_percentage_text_color = 'white';
-    } else if (monitor.uptime_percentage >= 90) {
-        monitor.uptime_percentage_text_color = 'yellow';
-    } else if (monitor.uptime_percentage >= 80) {
-        monitor.uptime_percentage_text_color = 'orange';
-    } else if (monitor.uptime_percentage >= 70) {
-        monitor.uptime_percentage_text_color = 'red';
-    } else {
-        monitor.uptime_percentage_text_color = 'black';
-    }
     monitor.uptime_color = monitor.status === 'up' ? 'green' : 'red';
     monitor.status_color = monitor.status === 'down' ? 'red' : 'green';
     return monitor;

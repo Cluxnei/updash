@@ -98,6 +98,14 @@
     align-items: center;
 }
 
+.view-monitor .monitor-buttons .card {
+    flex: 1;
+}
+
+.view-monitor .monitor-buttons .card .card-body {
+    display: flex;
+    justify-content: flex-end;
+}
 .view-monitor .monitor-btn {
     margin-left: 15px;
 }
