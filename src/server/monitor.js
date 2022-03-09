@@ -1,9 +1,10 @@
 const { default: axios } = require("axios");
-const { _select, _insert, _update } = require("./database/connection");
+const { _select, _insert, _update, _query } = require("./database/connection");
 const { log, currentTimestamp } = require("./helpers");
 
 const MINIMUM_HEARTBEATS_COUNT = 10;
 const FIXED_MONITOR_TIMEOUT = 2000;
+const MINIMUM_UPTIME_PERCENTAGE_TO_GREEN = 95;
 
 function monitorFactory(max_heart_beat_interval = 60) {
     return {
@@ -18,7 +19,7 @@ function fillHeartbeatsData(heartbeats) {
         if (heartbeat.isEmpty) {
             return heartbeat;
         }
-        heartbeat.color = 'green';
+        heartbeat.color = heartbeat.is_failed ? 'red' : 'green';
         return heartbeat;
     };
     if (heartbeats.length < MINIMUM_HEARTBEATS_COUNT) {
@@ -40,14 +41,34 @@ function fillTagsData(tags) {
 }
 
 async function fillMonitorData(monitor) {
-    const [heartbeats, tags] = await Promise.all([
+    const [heartbeats, tags, [{uptime_percentage}]] = await Promise.all([
         _select(['*'], 'monitor_heart_beats', `monitor_id = ?`, [monitor.id], 'created_at DESC'),
         _select(['*'], 'monitor_tags', `monitor_id = ?`, [monitor.id]),
+        _query(
+            `SELECT (
+                (
+                    (SELECT COUNT(id) FROM monitor_heart_beats WHERE monitor_id = ? AND is_failed = 0)
+                    /
+                    (SELECT COUNT(id) FROM monitor_heart_beats WHERE monitor_id = ?)
+                ) * 100
+            ) as uptime_percentage`,
+            [monitor.id, monitor.id]
+        ),
     ]);
     monitor.tags = fillTagsData(tags);
     monitor.heartbeats = fillHeartbeatsData(heartbeats);
-    monitor.uptime_color = 'green';
-    monitor.uptime_percentage = 100;
+    monitor.response_times = {
+        current: heartbeats[0].response_time,
+        avg: {
+            all_time: heartbeats.reduce((acc, heartbeat) => acc + heartbeat.response_time, 0) / heartbeats.length,
+        },
+        uptime: {
+            all_time: uptime_percentage,
+        },
+    };
+    monitor.uptime_percentage = uptime_percentage;
+    monitor.uptime_color = monitor.uptime_percentage > MINIMUM_UPTIME_PERCENTAGE_TO_GREEN ? 'green' : 'red';
+    monitor.status_color = monitor.status === 'down' ? 'red' : 'green';
     return monitor;
 }
 

@@ -19,7 +19,7 @@ module.exports = {
       },
       status_code: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       response_time: {
         type: Sequelize.INTEGER,

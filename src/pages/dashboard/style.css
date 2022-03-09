@@ -25,6 +25,9 @@
     align-items: flex-start;
     justify-content: flex-start;
     padding: 0.5rem;
+    background-color: transparent;
+    border: none;
+    border-bottom: solid 1px #e0e0e00c;
 }
 
 .monitor-up-time-percentage {
@@ -76,4 +79,74 @@
     position: relative;
     display: block;
     margin-left: 5px;
+}
+
+.view-monitor .monitor-name {
+    font-size: 3rem;
+    color: white;
+}
+
+.view-monitor .monitor-url {
+    font-size: 1.5rem;
+    color: rgb(48, 255, 29);
+}
+
+.view-monitor .monitor-buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.view-monitor .monitor-btn {
+    margin-left: 15px;
+}
+
+.view-monitor .monitor-big-heartbeats {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.view-monitor .monitor-big-heartbeats .monitor-heartbeats {
+    flex: 1;
+    overflow: hidden;
+}
+
+.view-monitor .monitor-big-heartbeats .monitor-heartbeats .monitor-heartbeat {
+    width: 10px;
+    height: 35px;
+    border-radius: 10px;
+    position: relative;
+    display: block;
+    margin-left: 6px;
+}
+
+.view-monitor .monitor-big-heartbeats .monitor-status {
+    font-size: 2rem;
+    color: white;
+    padding: 0px 15px;
+    border-radius: 15px;
+}
+
+.view-monitor .monitor-counters {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.view-monitor .monitor-counters .title {
+    font-size: 1.5rem;
+    color: white;
+}
+.view-monitor .monitor-counters .subtitle {
+    font-size: 1.2rem;
+    color: rgb(201, 201, 201);
+}
+.view-monitor .monitor-counters .value {
+    font-size: 2rem;
+    color: white;
+    font-weight: bold;
 }
