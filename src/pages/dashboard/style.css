@@ -130,6 +130,12 @@
     border-radius: 15px;
 }
 
+.view-monitor .monitor-heartbeat-interval-description {
+    font-size: 1rem;
+    color: rgb(199, 199, 199);
+    margin-left: 20px;
+}
+
 .view-monitor .monitor-counters {
     display: flex;
     flex-direction: column;

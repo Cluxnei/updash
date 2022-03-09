@@ -48,6 +48,9 @@ export default function Dashboard() {
         setMonitor(_monitor);
     }
 
+    if (!monitors.length || !monitor.id) {
+        return null;
+    }
 
     return (
         <div className="container-fluid">
@@ -119,7 +122,7 @@ export default function Dashboard() {
                         <div className="card-body">
                             <div className="monitor-big-heartbeats">
                                 <div className="monitor-heartbeats">
-                                    {monitor?.heartbeats?.slice(0, 33)?.reverse()?.map((heartbeat, heartbeatIndex) => (
+                                    {monitor.heartbeats.slice(0, 33).reverse().map((heartbeat, heartbeatIndex) => (
                                         <span
                                             key={`big-${heartbeat.id}-${heartbeatIndex}`}
                                             style={{ backgroundColor: heartbeat.color }}
@@ -129,7 +132,7 @@ export default function Dashboard() {
                                 </div>
                                 <span className="monitor-status" style={{backgroundColor: monitor.status_color}}>{monitor.status}</span>
                             </div>
-                            <p>Check every {monitor.heart_beat_interval} seconds</p>
+                            <p className="monitor-heartbeat-interval-description">Check every {monitor.heart_beat_interval} seconds</p>
                         </div>
                     </div>
                     <div className="card bg-dark text-white mt-3">
@@ -138,18 +141,18 @@ export default function Dashboard() {
                                 <div className="col-md-4 monitor-counters">
                                     <span className="title">Response</span>
                                     <span className="subtitle">(Current)</span>
-                                    <span className="value">{monitor?.response_times?.current} ms</span>
+                                    <span className="value">{monitor.response_times.current} ms</span>
                                     
                                 </div>
                                 <div className="col-md-4 monitor-counters">
                                     <span className="title">Avg Response</span>
                                     <span className="subtitle">(all-time)</span>
-                                    <span className="value">{monitor?.response_times?.avg?.all_time.toFixed(2)} ms</span>
+                                    <span className="value">{monitor.response_times.avg.all_time.toFixed(2)} ms</span>
                                 </div>
                                 <div className="col-md-4 monitor-counters">
                                     <span className="title">Uptime</span>
                                     <span className="subtitle">(all-time)</span>
-                                    <span className="value">{monitor?.response_times?.uptime?.all_time.toFixed(2)}%</span>
+                                    <span className="value">{monitor.response_times.uptime.all_time.toFixed(2)}%</span>
                                 </div>
                             </div>
                         </div>
