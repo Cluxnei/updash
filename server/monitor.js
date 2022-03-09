@@ -1,6 +1,6 @@
 const { default: axios } = require("axios");
 const { _select, _insert, _update, _query } = require("./database/connection");
-const { log, currentTimestamp, isToday } = require("./helpers");
+const { log, currentTimestamp, isToday, randomName } = require("./helpers");
 
 const MINIMUM_HEARTBEATS_COUNT = 10;
 const FIXED_MONITOR_TIMEOUT = 2000;
@@ -8,7 +8,7 @@ const HEART_BEATS_LIMIT = 100;
 
 function monitorFactory(max_heart_beat_interval = 60) {
     return {
-        name: 'Monitor name',
+        name: 'Monitor ' + randomName(),
         url: `${process.env.SERVER_URL}:${process.env.SERVER_PORT}`,
         heart_beat_interval: Math.max(10, Math.floor(Math.random() * max_heart_beat_interval)),
     };
@@ -69,7 +69,7 @@ async function fillMonitorData(monitor) {
         [{response_time_avg_last_24_hours}],
     ] = await Promise.all([
         _select(['*'], 'monitor_heart_beats', `monitor_id = ?`, [monitor.id], 'created_at DESC', HEART_BEATS_LIMIT),
-        _select(['*'], 'monitor_tags', `monitor_id = ?`, [monitor.id]),
+        _select(['t.*'], 'tags t,monitor_tags mt', `mt.tag_id = t.id AND mt.monitor_id = ?`, [monitor.id]),
         _query(
             `SELECT (
                 (

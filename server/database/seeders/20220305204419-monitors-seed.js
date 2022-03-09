@@ -12,7 +12,6 @@ module.exports = {
 
     for (let i = 0; i < numberToInset; i++) {
       const monitor = monitorFactory();
-      log({id: 'seeder'}, `Generating monitor ${i}`, monitor);
       monitors.push(monitor);
     }
 
@@ -25,14 +24,31 @@ module.exports = {
       }
     );
 
+    const tags = [];
+
+    for (let i = 0, t = Math.floor(Math.random() * 20); i < t; i++) {
+      tags.push({
+        name: `tag ${i}`,
+        color: randomColor(),
+      });
+    }
+
+    await queryInterface.bulkInsert('tags', tags, {});
+
+    const tagsIds = await queryInterface.sequelize.query(
+      `SELECT id FROM tags`,
+      {
+        type: queryInterface.sequelize.QueryTypes.SELECT,
+      }
+    );
+
     const monitorsTags = [];
 
     monitorsIds.forEach(monitor => {
-      for (let i = 0; i < Math.floor(Math.random() * 6); i++) {
+      for (let i = 0, t = Math.floor(Math.random() * 6); i < t; i++) {
         monitorsTags.push({
           monitor_id: monitor.id,
-          name: `tag-${i}`,
-          color: randomColor(),
+          tag_id: tagsIds[Math.floor(Math.random() * tagsIds.length)].id,
         });
       }
     });
