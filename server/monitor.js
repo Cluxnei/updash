@@ -4,7 +4,6 @@ const { log, currentTimestamp, isToday } = require("./helpers");
 
 const MINIMUM_HEARTBEATS_COUNT = 10;
 const FIXED_MONITOR_TIMEOUT = 2000;
-const MINIMUM_UPTIME_PERCENTAGE_TO_GREEN = 95;
 const HEART_BEATS_LIMIT = 100;
 
 function monitorFactory(max_heart_beat_interval = 60) {
@@ -45,7 +44,13 @@ function fillTagsData(tags) {
 }
 
 async function fillMonitorData(monitor) {
-    const [heartbeats, tags, [{uptime_percentage}], [{response_time_avg_all_time}]] = await Promise.all([
+    const [
+        heartbeats,
+        tags, 
+        [{uptime_percentage}], 
+        [{response_time_avg_all_time}],
+        [{response_time_avg_last_24_hours}],
+    ] = await Promise.all([
         _select(['*'], 'monitor_heart_beats', `monitor_id = ?`, [monitor.id], 'created_at DESC', HEART_BEATS_LIMIT),
         _select(['*'], 'monitor_tags', `monitor_id = ?`, [monitor.id]),
         _query(
@@ -59,6 +64,7 @@ async function fillMonitorData(monitor) {
             [monitor.id, monitor.id]
         ),
         _select(['AVG(response_time) as response_time_avg_all_time'], 'monitor_heart_beats', 'monitor_id = ?', [monitor.id]),
+        _select(['AVG(response_time) as response_time_avg_last_24_hours'], 'monitor_heart_beats', 'monitor_id = ? AND created_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 24 hour)', [monitor.id]),
     ]);
     monitor.tags = fillTagsData(tags);
     monitor.heartbeats = fillHeartbeatsData(heartbeats);
@@ -66,13 +72,26 @@ async function fillMonitorData(monitor) {
         current: heartbeats[0]?.response_time,
         avg: {
             all_time: response_time_avg_all_time,
+            last_24_hours: response_time_avg_last_24_hours,
         },
         uptime: {
             all_time: uptime_percentage,
         },
     };
     monitor.uptime_percentage = uptime_percentage;
-    monitor.uptime_color = monitor.uptime_percentage > MINIMUM_UPTIME_PERCENTAGE_TO_GREEN ? 'green' : 'red';
+    monitor.uptime_percentage_text_color = 'white';
+    if (monitor.uptime_percentage >= 98) {
+        monitor.uptime_percentage_text_color = 'white';
+    } else if (monitor.uptime_percentage >= 90) {
+        monitor.uptime_percentage_text_color = 'yellow';
+    } else if (monitor.uptime_percentage >= 80) {
+        monitor.uptime_percentage_text_color = 'orange';
+    } else if (monitor.uptime_percentage >= 70) {
+        monitor.uptime_percentage_text_color = 'red';
+    } else {
+        monitor.uptime_percentage_text_color = 'black';
+    }
+    monitor.uptime_color = monitor.status === 'up' ? 'green' : 'red';
     monitor.status_color = monitor.status === 'down' ? 'red' : 'green';
     return monitor;
 }

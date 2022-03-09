@@ -116,7 +116,7 @@ export default function Dashboard() {
             return;
         }
         setFailuresChartData(_chartData => {
-            const failed_heartbeats = monitor.heartbeats.slice(0, BIG_HEARTBEATS_COUNT).filter(heartbeat => heartbeat.is_failed);
+            const failed_heartbeats = monitor.heartbeats.slice(0, BIG_HEARTBEATS_COUNT).filter(heartbeat => heartbeat.is_failed).reverse();
             return {
                 ..._chartData, 
                 labels: failed_heartbeats.map(heartbeat => heartbeat.label_time),
@@ -129,7 +129,7 @@ export default function Dashboard() {
             };
         });
         setAssertionsChartData(_chartData => {
-            const assertions = monitor.heartbeats.slice(0, BIG_HEARTBEATS_COUNT).filter(heartbeat => !heartbeat.is_failed);
+            const assertions = monitor.heartbeats.slice(0, BIG_HEARTBEATS_COUNT).filter(heartbeat => !heartbeat.is_failed).reverse();
             return {
                 ..._chartData, 
                 labels: assertions.map(heartbeat => heartbeat.label_time),
@@ -171,7 +171,11 @@ export default function Dashboard() {
                                     monitors.map((_monitor, monitorIndex) => {
                                         return (
                                             <button onClick={() => handleMonitorClick(_monitor)} className="col-md-12 monitor-list-item" key={`${_monitor.id}-${monitorIndex}`}>
-                                                <div className="monitor-up-time-percentage" style={{ backgroundColor: _monitor.uptime_color }}>
+                                                <div className="monitor-up-time-percentage" style={{ 
+                                                    backgroundColor: _monitor.uptime_color,
+                                                    color: _monitor.uptime_percentage_text_color
+                                                    }}
+                                                >
                                                     <span>{_monitor.uptime_percentage.toFixed(2)}%</span>
                                                 </div>
                                                 <div className="monitor-name-and-tags-container">
@@ -236,21 +240,26 @@ export default function Dashboard() {
                     <div className="card bg-dark text-white mt-3">
                         <div className="card-body">
                             <div className="row">
-                                <div className="col-md-4 monitor-counters">
+                                <div className="col-md-3 monitor-counters">
                                     <span className="title">Response</span>
                                     <span className="subtitle">(Current)</span>
                                     <span className="value">{monitor.response_times.current} ms</span>
 
                                 </div>
-                                <div className="col-md-4 monitor-counters">
+                                <div className="col-md-3 monitor-counters">
                                     <span className="title">Avg Response</span>
                                     <span className="subtitle">(all-time)</span>
                                     <span className="value">{monitor.response_times.avg.all_time.toFixed(2)} ms</span>
                                 </div>
-                                <div className="col-md-4 monitor-counters">
+                                <div className="col-md-3 monitor-counters">
+                                    <span className="title">Avg Response</span>
+                                    <span className="subtitle">(last-24-hours)</span>
+                                    <span className="value">{monitor.response_times.avg.last_24_hours.toFixed(2)} ms</span>
+                                </div>
+                                <div className="col-md-3 monitor-counters">
                                     <span className="title">Uptime</span>
                                     <span className="subtitle">(all-time)</span>
-                                    <span className="value">{monitor.response_times.uptime.all_time.toFixed(2)}%</span>
+                                    <span className="value" style={{color: monitor.uptime_percentage_text_color}}>{monitor.response_times.uptime.all_time.toFixed(2)}%</span>
                                 </div>
                             </div>
                         </div>
