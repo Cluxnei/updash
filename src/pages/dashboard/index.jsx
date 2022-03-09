@@ -203,7 +203,11 @@ export default function Dashboard() {
                                 {
                                     monitors.map((_monitor, monitorIndex) => {
                                         return (
-                                            <button onClick={() => handleMonitorClick(_monitor)} className="col-md-12 monitor-list-item" key={`${_monitor.id}-${monitorIndex}`}>
+                                            <button 
+                                                onClick={() => handleMonitorClick(_monitor)} 
+                                                className={`col-md-12 monitor-list-item ${monitor.id === _monitor.id ? 'active' : ''}`}
+                                                key={`${_monitor.id}-${monitorIndex}`}
+                                            >
                                                 <div className="monitor-up-time-percentage" style={{ 
                                                     backgroundColor: _monitor.uptime_color,
                                                     color: _monitor.response_times.uptime.all_time_text_color

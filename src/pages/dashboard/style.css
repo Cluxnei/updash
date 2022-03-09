@@ -30,6 +30,10 @@
     border-bottom: solid 1px #e0e0e00c;
 }
 
+.monitor-list-item.active {
+    background-color: #19a22217;
+}
+
 .monitor-up-time-percentage {
     border-radius: 15px;
 }
