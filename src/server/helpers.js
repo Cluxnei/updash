@@ -48,10 +48,18 @@ function currentTimestamp() {
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`;
 }
 
+function isToday(someDate) {
+    const today = new Date()
+    return someDate.getDate() === today.getDate() &&
+      someDate.getMonth() === today.getMonth() &&
+      someDate.getFullYear() === today.getFullYear()
+  }
+
 module.exports = {
     CONSOLE_COLORS,
     log,
     randomColor,
     delay,
     currentTimestamp,
+    isToday,
 };

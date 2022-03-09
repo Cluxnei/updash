@@ -1,6 +1,6 @@
 const { default: axios } = require("axios");
 const { _select, _insert, _update, _query } = require("./database/connection");
-const { log, currentTimestamp } = require("./helpers");
+const { log, currentTimestamp, isToday } = require("./helpers");
 
 const MINIMUM_HEARTBEATS_COUNT = 10;
 const FIXED_MONITOR_TIMEOUT = 2000;
@@ -20,6 +20,9 @@ function fillHeartbeatsData(heartbeats) {
             return heartbeat;
         }
         heartbeat.color = heartbeat.is_failed ? 'red' : 'green';
+        const time = new Date(heartbeat.created_at);
+        const day = isToday(time) ? 'hj' : `${time.getDate()}/${time.getMonth() + 1}/${time.getFullYear().toString().substring(2)}`;
+        heartbeat.label_time = `${day} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
         return heartbeat;
     };
     if (heartbeats.length < MINIMUM_HEARTBEATS_COUNT) {
@@ -58,7 +61,7 @@ async function fillMonitorData(monitor) {
     monitor.tags = fillTagsData(tags);
     monitor.heartbeats = fillHeartbeatsData(heartbeats);
     monitor.response_times = {
-        current: heartbeats[0].response_time,
+        current: heartbeats[0]?.response_time,
         avg: {
             all_time: heartbeats.reduce((acc, heartbeat) => acc + heartbeat.response_time, 0) / heartbeats.length,
         },

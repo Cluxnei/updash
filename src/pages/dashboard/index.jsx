@@ -1,6 +1,39 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createSocket, isUserLoggedIn } from "../../helpers";
 import './style.css';
+import { Line } from "react-chartjs-2";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+} from 'chart.js';
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
+
+const options = {
+    responsive: true,
+    plugins: {
+        legend: {
+            position: 'top',
+        },
+    },
+};
+
+const SMALL_HEARTBEATS_COUNT = 11;
+const BIG_HEARTBEATS_COUNT = 33;
 
 const socket = createSocket();
 
@@ -8,6 +41,28 @@ export default function Dashboard() {
 
     const [monitors, setMonitors] = useState([]);
     const [monitor, setMonitor] = useState({});
+    const [failuresChartData, setFailuresChartData] = useState({
+        labels: [],
+        datasets: [
+            {
+                label: 'Failures',
+                data: [],
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            },
+        ],
+    });
+    const [assertionsChartData, setAssertionsChartData] = useState({
+        labels: [],
+        datasets: [
+            {
+                label: 'Assertions',
+                data: [],
+                borderColor: 'rgb(53, 255, 135)',
+                backgroundColor: 'rgba(53, 162, 235, 0.5)',
+            }
+        ],
+    });
 
     useEffect(() => {
         document.title = 'Dashboard';
@@ -37,6 +92,13 @@ export default function Dashboard() {
                 oldMonitors[monitorIndex] = data.monitor;
                 return [...oldMonitors];
             });
+            setMonitor((oldMonitor) => {
+                const currentMonitorIndex = monitors.findIndex(_monitor => _monitor.id === oldMonitor.id);
+                if (currentMonitorIndex === -1) {
+                    return oldMonitor;
+                }
+                return monitors[currentMonitorIndex];
+            });
         };
         socket.on('monitor-runned', call);
         return () => {
@@ -47,6 +109,42 @@ export default function Dashboard() {
     function handleMonitorClick(_monitor) {
         setMonitor(_monitor);
     }
+
+    useEffect(() => {
+        let mounted = true;
+        if (!monitor.id || !mounted) {
+            return;
+        }
+        setFailuresChartData(_chartData => {
+            const failed_heartbeats = monitor.heartbeats.slice(0, BIG_HEARTBEATS_COUNT).filter(heartbeat => heartbeat.is_failed);
+            return {
+                ..._chartData, 
+                labels: failed_heartbeats.map(heartbeat => heartbeat.label_time),
+                datasets: [
+                    {
+                        ..._chartData.datasets[0],
+                        data: failed_heartbeats.map(heartbeat => heartbeat.response_time),
+                    },
+                ]
+            };
+        });
+        setAssertionsChartData(_chartData => {
+            const assertions = monitor.heartbeats.slice(0, BIG_HEARTBEATS_COUNT).filter(heartbeat => !heartbeat.is_failed);
+            return {
+                ..._chartData, 
+                labels: assertions.map(heartbeat => heartbeat.label_time),
+                datasets: [
+                    {
+                        ..._chartData.datasets[0],
+                        data: assertions.map(heartbeat => heartbeat.response_time),
+                    },
+                ]
+            };
+        });
+        return () => {
+            mounted = false;
+        };
+    }, [monitor]);
 
     if (!monitors.length || !monitor.id) {
         return null;
@@ -93,7 +191,7 @@ export default function Dashboard() {
                                                     </div>
                                                 </div>
                                                 <div className="monitor-heartbeats">
-                                                    {_monitor.heartbeats.slice(0, 11).reverse().map((heartbeat, heartbeatIndex) => (
+                                                    {_monitor.heartbeats.slice(0, SMALL_HEARTBEATS_COUNT).reverse().map((heartbeat, heartbeatIndex) => (
                                                         <span
                                                             key={`small-${heartbeat.id}-${heartbeatIndex}`}
                                                             style={{ backgroundColor: heartbeat.color }}
@@ -122,7 +220,7 @@ export default function Dashboard() {
                         <div className="card-body">
                             <div className="monitor-big-heartbeats">
                                 <div className="monitor-heartbeats">
-                                    {monitor.heartbeats.slice(0, 33).reverse().map((heartbeat, heartbeatIndex) => (
+                                    {monitor.heartbeats.slice(0, BIG_HEARTBEATS_COUNT).reverse().map((heartbeat, heartbeatIndex) => (
                                         <span
                                             key={`big-${heartbeat.id}-${heartbeatIndex}`}
                                             style={{ backgroundColor: heartbeat.color }}
@@ -130,7 +228,7 @@ export default function Dashboard() {
                                         />
                                     ))}
                                 </div>
-                                <span className="monitor-status" style={{backgroundColor: monitor.status_color}}>{monitor.status}</span>
+                                <span className="monitor-status" style={{ backgroundColor: monitor.status_color }}>{monitor.status}</span>
                             </div>
                             <p className="monitor-heartbeat-interval-description">Check every {monitor.heart_beat_interval} seconds</p>
                         </div>
@@ -142,7 +240,7 @@ export default function Dashboard() {
                                     <span className="title">Response</span>
                                     <span className="subtitle">(Current)</span>
                                     <span className="value">{monitor.response_times.current} ms</span>
-                                    
+
                                 </div>
                                 <div className="col-md-4 monitor-counters">
                                     <span className="title">Avg Response</span>
@@ -157,6 +255,28 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
+                    {failuresChartData.labels.length && (
+                        <div className="card bg-dark text-white mt-3">
+                            <div className="card-body">
+                                <div className="row">
+                                    <div className="col-md-12 monitor-response-chart">
+                                        <Line data={failuresChartData} options={options} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {assertionsChartData.labels.length && (
+                        <div className="card bg-dark text-white mt-3">
+                            <div className="card-body">
+                                <div className="row">
+                                    <div className="col-md-12 monitor-response-chart">
+                                        <Line data={assertionsChartData} options={options} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
