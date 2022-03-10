@@ -38,14 +38,12 @@ io.on("connection", (socket) => {
 });
 
 let mainMonitorsThreadShouldRun = true;
-let elapsedTimeInSeconds = 0;
 
 async function mainMonitorsThread() {
-  log({id: 'main-monitors-thread'}, "main monitors thread start");
-  await handleMonitorsThread(io, elapsedTimeInSeconds);
-  log({id: 'main-monitors-thread'}, "main monitors thread done");
+  // log({id: 'main-monitors-thread'}, "main monitors thread start");
+  await handleMonitorsThread(io);
+  // log({id: 'main-monitors-thread'}, "main monitors thread done");
   await delay(1000);
-  elapsedTimeInSeconds++;
   if (mainMonitorsThreadShouldRun) {
     mainMonitorsThread();
   }

@@ -30,7 +30,7 @@ export function authenticateUser(user, expires) {
   sessionStorage.setItem('@@expires', expires);
 }
 
-const MySwal = withReactContent(Swal);
+export const MySwal = withReactContent(Swal);
 
 export const Toast = MySwal.mixin({
   toast: true,

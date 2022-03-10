@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createSocket, isUserLoggedIn } from "../../helpers";
+import { createSocket, isUserLoggedIn, MySwal } from "../../helpers";
 import './style.css';
 import { Line } from "react-chartjs-2";
 import {
@@ -104,6 +104,14 @@ export default function Dashboard() {
 
         socket.on('monitor-paused', pauseOrResumeMonitorCallback);
         socket.on('monitor-resumed', pauseOrResumeMonitorCallback);
+        socket.on('monitor-deleted', (data) => {
+            setMonitors((oldMonitors) => {
+                return oldMonitors.filter(_monitor => _monitor.id !== data.id);
+            });
+            if (monitor.id === data.id) {
+                setMonitor({});
+            }
+        });
 
     }, []);
 
@@ -135,12 +143,29 @@ export default function Dashboard() {
         setMonitor(_monitor);
     }
 
-    function handlePauseMonitor() {
+    function handlePauseOrResumeMonitor() {
         if (monitor.is_paused) {
             socket.emit('resume-monitor', monitor.id);
             return;
         }
         socket.emit('pause-monitor', monitor.id);
+    }
+
+    async function handleDeleteMonitor() {
+        console.log('delete monitor');
+        const {value} = await MySwal.fire({
+            title: 'Are you sure?',
+            text: 'You won\'t be able to revert this!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        });
+        if (!value) {
+            return;
+        }
+        socket.emit('delete-monitor', monitor.id);
     }
 
     useEffect(() => {
@@ -254,11 +279,11 @@ export default function Dashboard() {
                     <a className="monitor-url" href={monitor.url} target="_blank" rel="noreferrer">{monitor.url}</a>
 
                     <div className="mt-3 monitor-buttons">
-                        <button className="monitor-btn btn btn-primary" onClick={handlePauseMonitor}>
+                        <button className="monitor-btn btn btn-primary" onClick={handlePauseOrResumeMonitor}>
                             {monitor.is_paused ? 'resume' : 'pause'}
                         </button>
                         <button className="monitor-btn btn btn-secondary">Edit</button>
-                        <button className="monitor-btn btn btn-danger">Delete</button>
+                        <button className="monitor-btn btn btn-danger" onClick={handleDeleteMonitor}>Delete</button>
                         {monitor.tags.length && (
                             <div className="card bg-dark">
                                 <div className="card-body p-2">

@@ -30,7 +30,7 @@ function _escape(value) {
 }
 
 function _query(sql, params = []) {
-    log({id: 'db'}, {sql, params});
+    log({id: 'db'}, {sql: sql.split('\n').map(l => l.trim()).join(''), params});
     return new Promise((resolve, reject) => {
         getConnection().query(sql, params.map(_escape), (err, rows) => {
             if (err) {
@@ -67,6 +67,8 @@ function _delete(table, where = null, params = []) {
     return _query(sql, params);
 }
 
+const SOFT_DELETES_WHERE = 'deleted_at IS NULL';
+
 module.exports = {
     getConnection,
     closeConnection,
@@ -76,4 +78,5 @@ module.exports = {
     _update,
     _delete,
     _insert_many,
+    SOFT_DELETES_WHERE
 };
