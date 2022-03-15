@@ -18,5 +18,13 @@ module.exports = {
     'react',
   ],
   rules: {
+
+  },
+  settings: {
+    'import/resolver': {
+      node: {
+        extensions: ['.js', '.jsx'],
+      },
+    },
   },
 };

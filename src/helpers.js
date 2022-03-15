@@ -1,4 +1,4 @@
-import socketIOClient from "socket.io-client";
+import socketIOClient from 'socket.io-client';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 
@@ -9,11 +9,11 @@ export function createSocket() {
     socket = socketIOClient(process.env.REACT_APP_SERVER_URL, {
       withCredentials: false,
       reconnect: true,
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
     });
   }
   return socket;
-};
+}
 
 export function isUserLoggedIn() {
   const user = sessionStorage.getItem('@@user');

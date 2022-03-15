@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
 import Dashboard from './pages/dashboard';
-import Login from './pages/login';	
+import Login from './pages/login';
 import App from './App';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -17,5 +17,5 @@ ReactDOM.render(
       <Route path="/login" element={<Login />} />
     </Routes>
   </BrowserRouter>,
-  rootElement
+  rootElement,
 );

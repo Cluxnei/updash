@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { isUserLoggedIn } from "./helpers";
+import { useEffect } from 'react';
+import { isUserLoggedIn } from './helpers';
 
 function App() {
   useEffect(() => {
