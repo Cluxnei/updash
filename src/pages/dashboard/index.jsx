@@ -257,7 +257,7 @@ export default function Dashboard() {
                                                     </div>
                                                 </div>
                                                 <div className="monitor-heartbeats">
-                                                    {_monitor.heartbeats.slice(0, SMALL_HEARTBEATS_COUNT).reverse().map((heartbeat, heartbeatIndex) => (
+                                                    {_monitor.heartbeats.slice(0, SMALL_HEARTBEATS_COUNT).map((heartbeat, heartbeatIndex) => (
                                                         <span
                                                             key={`small-${heartbeat.id}-${heartbeatIndex}`}
                                                             style={{ backgroundColor: heartbeat.color }}

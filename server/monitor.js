@@ -2,7 +2,7 @@ const { default: axios } = require("axios");
 const { _select, _insert, _update, _query, SOFT_DELETES_WHERE } = require("./database/connection");
 const { log, currentTimestamp, isToday } = require("./helpers");
 
-const MINIMUM_HEARTBEATS_COUNT = 10;
+const MINIMUM_HEARTBEATS_COUNT = 11;
 const FIXED_MONITOR_TIMEOUT = 2000;
 const HEART_BEATS_LIMIT = 100;
 

@@ -6,6 +6,7 @@ import Dashboard from './pages/dashboard';
 import Login from './pages/login';	
 import App from './App';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
 const rootElement = document.getElementById('root');
 
 ReactDOM.render(
