@@ -172,14 +172,14 @@ export default function Dashboard() {
             return;
         }
         setFailuresChartData(_chartData => {
-            const failed_heartbeats = monitor.heartbeats.slice(0, BIG_HEARTBEATS_COUNT).filter(heartbeat => heartbeat.is_failed).reverse();
+            const failedHeartbeats = monitor.heartbeats.slice(0, BIG_HEARTBEATS_COUNT).filter(heartbeat => heartbeat.is_failed).reverse();
             return {
                 ..._chartData, 
-                labels: failed_heartbeats.map(heartbeat => heartbeat.label_time),
+                labels: failedHeartbeats.map(heartbeat => heartbeat.label_time),
                 datasets: [
                     {
                         ..._chartData.datasets[0],
-                        data: failed_heartbeats.map(heartbeat => heartbeat.response_time),
+                        data: failedHeartbeats.map(heartbeat => heartbeat.response_time),
                     },
                 ]
             };

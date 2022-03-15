@@ -38,6 +38,14 @@ export default function Login() {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
+        if (!username || !password || username.trim().length === 0 || password.trim().length === 0) {
+            Toast.fire({
+                icon: 'error',
+                title: 'Please fill in all fields',
+            });
+            return;
+        }
+
         socket.emit('login-attempt', { username, password });
     }
 

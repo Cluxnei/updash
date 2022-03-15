@@ -7,17 +7,27 @@ body {
 }
 
 .login-form {
-    color: rgb(0, 184, 153);
+    color: rgb(0 184 36);
+    padding: 2rem 4rem;
+    width: 420px;
+    border-radius: 15px;
+    height: 464px;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    border: solid 10px #00b824;
+    background: #070022;
+    z-index: 2;
 }
 
 .btn-login {
-    background-color: rgb(0, 184, 153);
+    background-color: rgb(0 184 36);
     color: #fff;
     width: 100%;
 }
 
 .login-form input {
-    border: 1px solid rgb(0, 184, 153);
+    border: 1px solid rgb(0 184 36);
     border-radius: 5px;
     padding: 10px;
     margin-bottom: 10px;
