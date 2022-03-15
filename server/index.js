@@ -17,17 +17,11 @@ app.use(index);
 
 const server = http.createServer(app);
 
-// const io = socketIo(server, {
-//   cors: {
-//     origin: process.env.SOCKET_ORIGIN,
-//     methods: ['GET', 'POST']
-//   }
-// });
-
-const io = socketIo(process.env.SOCKET_URL, {
-  withCredentials: false,
-  reconnect: true,
-  transports: ['websocket', 'polling']
+const io = socketIo(server, {
+  cors: {
+    origin: process.env.SOCKET_ORIGIN,
+    methods: ['GET', 'POST']
+  }
 });
 
 const clientsConnected = {};
