@@ -1,7 +1,5 @@
-
-
 module.exports = {
-  async up (queryInterface, Sequelize) {
+  async up(queryInterface, Sequelize) {
     await queryInterface.createTable('tags', {
       id: {
         type: Sequelize.BIGINT,
@@ -33,7 +31,7 @@ module.exports = {
     });
   },
 
-  async down (queryInterface) {
+  async down(queryInterface) {
     await queryInterface.dropTable('tags');
-  }
+  },
 };

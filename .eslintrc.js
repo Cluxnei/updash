@@ -18,7 +18,7 @@ module.exports = {
     'react',
   ],
   rules: {
-
+    camelcase: [2, { ignoreDestructuring: true, properties: 'never' }],
   },
   settings: {
     'import/resolver': {

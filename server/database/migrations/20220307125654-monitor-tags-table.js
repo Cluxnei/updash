@@ -1,7 +1,5 @@
-
-
 module.exports = {
-  async up (queryInterface, Sequelize) {
+  async up(queryInterface, Sequelize) {
     await queryInterface.createTable('monitor_tags', {
       id: {
         type: Sequelize.BIGINT,
@@ -41,7 +39,7 @@ module.exports = {
     });
   },
 
-  async down (queryInterface, Sequelize) {
+  async down(queryInterface) {
     await queryInterface.dropTable('monitor_tags');
-  }
+  },
 };
