@@ -33,7 +33,15 @@ function log(entity, message, ...messages) {
     if (String(process.env.SERVER_DEBUG) !== 'true') {
         return;
     }
-    console.log(`${CONSOLE_COLORS.FgMagenta}${new Date().toISOString()}:${CONSOLE_COLORS.FgYellow}[${entity.id}]${CONSOLE_COLORS.Reset} -`, message, ...messages);
+    if (String(process.env.SERVER_DEBUG_HIDDEN_IDS).split(',').includes(entity.id)) {
+        return;
+    }
+    const date = new Date().toISOString();
+    const date_color = CONSOLE_COLORS.FgMagenta;
+    const entity_id_color = CONSOLE_COLORS.FgYellow;
+    const message_color = CONSOLE_COLORS.Reset;
+    const base_log_message = `${date_color}${date}:${entity_id_color}[${entity.id}]${message_color} -`;
+    console.log(base_log_message, message, ...messages);
 };
 
 function delay(ms) {

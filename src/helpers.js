@@ -2,13 +2,11 @@ import socketIOClient from "socket.io-client";
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 
-const SERVER_ENDPOINT = `${process.env.REACT_APP_SERVER_URL}`;
-
 let socket = null;
 
 export function createSocket() {
   if (socket === null) {
-    socket = socketIOClient(SERVER_ENDPOINT, {
+    socket = socketIOClient(process.env.REACT_APP_SERVER_URL, {
       withCredentials: false,
       reconnect: true,
       transports: ['websocket', 'polling']

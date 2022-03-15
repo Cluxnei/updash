@@ -29,7 +29,6 @@ export default function Login() {
                 icon: 'error',
                 title: data.message,
             });
-            console.log(data);
         });
 
     }, []);

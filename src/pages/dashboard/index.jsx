@@ -81,7 +81,6 @@ export default function Dashboard() {
         });
 
         const pauseOrResumeMonitorCallback = (data) => {
-            console.log(data);
             const _monitorIndex = monitors.findIndex(_monitor => _monitor.id === data.id);
             if (_monitorIndex === -1) {
                 return;
@@ -152,7 +151,6 @@ export default function Dashboard() {
     }
 
     async function handleDeleteMonitor() {
-        console.log('delete monitor');
         const {value} = await MySwal.fire({
             title: 'Are you sure?',
             text: 'You won\'t be able to revert this!',

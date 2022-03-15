@@ -40,9 +40,8 @@ io.on("connection", (socket) => {
 let mainMonitorsThreadShouldRun = true;
 
 async function mainMonitorsThread() {
-  // log({id: 'main-monitors-thread'}, "main monitors thread start");
   await handleMonitorsThread(io);
-  // log({id: 'main-monitors-thread'}, "main monitors thread done");
+  log({id: 'main-monitors-thread'}, "main monitors thread runned");
   await delay(1000);
   if (mainMonitorsThreadShouldRun) {
     mainMonitorsThread();
@@ -66,10 +65,9 @@ function gracefulShutdown() {
   closeConnection();
   log({id: 'graceful-shutdown'}, "database connection closed");
   log({id: 'graceful-shutdown'}, "closing server");
-  server.close(() => {
-    process.exit(0);
-  });
+  server.close();
   log({id: 'graceful-shutdown'}, "server closed");
+  process.exit(0);
 }
 
 process.on('SIGINT', gracefulShutdown);

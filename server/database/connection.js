@@ -20,7 +20,7 @@ function getConnection() {
 
 function closeConnection() {
     if (connection !== null) {
-        connection.close();
+        connection.end();
         connection = null;
     }
 }
