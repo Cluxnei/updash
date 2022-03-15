@@ -30,7 +30,7 @@ function randomColor() {
 }
 
 function log(entity, message, ...messages) {
-    if (String(process.env.SERVER_DEBUG) === 'true') {
+    if (String(process.env.SERVER_DEBUG) !== 'true') {
         return;
     }
     console.log(`${CONSOLE_COLORS.FgMagenta}${new Date().toISOString()}:${CONSOLE_COLORS.FgYellow}[${entity.id}]${CONSOLE_COLORS.Reset} -`, message, ...messages);
