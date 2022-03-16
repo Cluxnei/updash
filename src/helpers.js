@@ -121,6 +121,7 @@ function isJson(str) {
 }
 
 export function syntaxHighlight(json) {
+  json = json || '';
   if (isJson(json)) {
     json = JSON.stringify(JSON.parse(json), null, 2);
   }
