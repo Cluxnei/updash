@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createSocket, emmit, getUserToken, isUserLoggedIn, MySwal } from "../../helpers";
+import { createSocket, emmit, isUserLoggedIn, MySwal } from "../../helpers";
 import './style.css';
 import { Line } from "react-chartjs-2";
 import {
@@ -12,6 +12,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
+import NewMonitorModal from "./new-monitor-modal";
 
 ChartJS.register(
     CategoryScale,
@@ -38,6 +39,7 @@ const BIG_HEARTBEATS_COUNT = 33;
 const socket = createSocket();
 
 export default function Dashboard() {
+    const [showNewMonitorModal, setShowNewMonitorModal] = useState(false);
 
     const [monitors, setMonitors] = useState([]);
     const [monitor, setMonitor] = useState({});
@@ -210,172 +212,175 @@ export default function Dashboard() {
     }, [monitor]);
 
     return (
-        <div className="container-fluid">
-            <div className="row">
-                <div className="col-md-12 text-white">
-                    <h1>Dashboard</h1>
+        <>
+            <NewMonitorModal show={showNewMonitorModal} onHide={() => setShowNewMonitorModal(false)} />
+            <div className="container-fluid">
+                <div className="row">
+                    <div className="col-md-12 text-white">
+                        <h1>Dashboard</h1>
+                    </div>
                 </div>
-            </div>
-            <div className="row">
-                <div className="col-md-4">
-                    <div className="card bg-dark text-white">
-                        <div className="card-body">
-                            <h5 className="card-title">
-                                <button className="btn btn-primary">
-                                    add new monitor
-                                </button>
-                            </h5>
-                            <div className="row monitors-list">
-                                {
-                                    monitors.map((_monitor, monitorIndex) => {
-                                        return (
-                                            <button 
-                                                onClick={() => handleMonitorClick(_monitor)} 
-                                                className={`col-md-12 monitor-list-item ${monitor.id === _monitor.id ? 'active' : ''}`}
-                                                key={`${_monitor.id}-${monitorIndex}`}
-                                            >
-                                                <div className="monitor-up-time-percentage" style={{ 
-                                                    backgroundColor: _monitor.uptime_color,
-                                                    color: _monitor.response_times.uptime.all_time_text_color
-                                                    }}
+                <div className="row">
+                    <div className="col-md-4">
+                        <div className="card bg-dark text-white">
+                            <div className="card-body">
+                                <h5 className="card-title">
+                                    <button className="btn btn-primary" onClick={() => setShowNewMonitorModal(true)}>
+                                        add new monitor
+                                    </button>
+                                </h5>
+                                <div className="row monitors-list">
+                                    {
+                                        monitors.map((_monitor, monitorIndex) => {
+                                            return (
+                                                <button 
+                                                    onClick={() => handleMonitorClick(_monitor)} 
+                                                    className={`col-md-12 monitor-list-item ${monitor.id === _monitor.id ? 'active' : ''}`}
+                                                    key={`${_monitor.id}-${monitorIndex}`}
                                                 >
-                                                    <span>{_monitor.uptime_percentage.toFixed(2)}%</span>
-                                                </div>
-                                                <div className="monitor-name-and-tags-container">
-                                                    <div className="monitor-name">
-                                                        {_monitor.name}
+                                                    <div className="monitor-up-time-percentage" style={{ 
+                                                        backgroundColor: _monitor.uptime_color,
+                                                        color: _monitor.response_times.uptime.all_time_text_color
+                                                        }}
+                                                    >
+                                                        <span>{_monitor.uptime_percentage.toFixed(2)}%</span>
                                                     </div>
-                                                    <div className="monitor-tags">
-                                                        {_monitor.tags.map((tag, tagIndex) => (
+                                                    <div className="monitor-name-and-tags-container">
+                                                        <div className="monitor-name">
+                                                            {_monitor.name}
+                                                        </div>
+                                                        <div className="monitor-tags">
+                                                            {_monitor.tags.map((tag, tagIndex) => (
+                                                                <span
+                                                                    key={`${tag.id}-${tagIndex}`}
+                                                                    style={{ backgroundColor: tag.color }}
+                                                                    className="monitor-tag"
+                                                                >
+                                                                    {tag.name}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <div className="monitor-heartbeats">
+                                                        {_monitor.heartbeats.slice(0, SMALL_HEARTBEATS_COUNT).map((heartbeat, heartbeatIndex) => (
                                                             <span
-                                                                key={`${tag.id}-${tagIndex}`}
-                                                                style={{ backgroundColor: tag.color }}
-                                                                className="monitor-tag"
-                                                            >
-                                                                {tag.name}
-                                                            </span>
+                                                                key={`small-${heartbeat.id}-${heartbeatIndex}`}
+                                                                style={{ backgroundColor: heartbeat.color }}
+                                                                className="monitor-heartbeat"
+                                                            />
                                                         ))}
                                                     </div>
-                                                </div>
-                                                <div className="monitor-heartbeats">
-                                                    {_monitor.heartbeats.slice(0, SMALL_HEARTBEATS_COUNT).map((heartbeat, heartbeatIndex) => (
-                                                        <span
-                                                            key={`small-${heartbeat.id}-${heartbeatIndex}`}
-                                                            style={{ backgroundColor: heartbeat.color }}
-                                                            className="monitor-heartbeat"
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </button>
-                                        );
-                                    })
-                                }
+                                                </button>
+                                            );
+                                        })
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
+                    {monitor.id ? (
+                        <div className="col-md-8 view-monitor">
+                            <span className="monitor-name">{monitor.name}</span>
+                            <br />
+                            <a className="monitor-url" href={monitor.url} target="_blank" rel="noreferrer">{monitor.url}</a>
+
+                            <div className="mt-3 monitor-buttons">
+                                <button className="monitor-btn btn btn-primary" onClick={handlePauseOrResumeMonitor}>
+                                    {monitor.is_paused ? 'resume' : 'pause'}
+                                </button>
+                                <button className="monitor-btn btn btn-secondary">Edit</button>
+                                <button className="monitor-btn btn btn-danger" onClick={handleDeleteMonitor}>Delete</button>
+                                {monitor.tags.length && (
+                                    <div className="card bg-dark">
+                                        <div className="card-body p-2">
+                                            {monitor.tags.map((tag, tagIndex) => (
+                                                <span
+                                                    key={`big-${tag.id}-${tagIndex}`}
+                                                    style={{ backgroundColor: tag.color }}
+                                                    className="monitor-tag"
+                                                >
+                                                    {tag.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="card bg-dark text-white mt-3">
+                                <div className="card-body">
+                                    <div className="monitor-big-heartbeats">
+                                        <div className="monitor-heartbeats">
+                                            {monitor.heartbeats.slice(0, BIG_HEARTBEATS_COUNT).reverse().map((heartbeat, heartbeatIndex) => (
+                                                <span
+                                                    key={`big-${heartbeat.id}-${heartbeatIndex}`}
+                                                    style={{ backgroundColor: heartbeat.color }}
+                                                    className="monitor-heartbeat"
+                                                />
+                                            ))}
+                                        </div>
+                                        <span className="monitor-status" style={{ backgroundColor: monitor.status_color }}>{monitor.status}</span>
+                                    </div>
+                                    <p className="monitor-heartbeat-interval-description">Check every {monitor.heart_beat_interval} seconds</p>
+                                </div>
+                            </div>
+                            <div className="card bg-dark text-white mt-3">
+                                <div className="card-body">
+                                    <div className="row">
+                                        <div className="col-md-3 col-sm-6 monitor-counters">
+                                            <span className="title">Response</span>
+                                            <span className="subtitle">(Current)</span>
+                                            <span className="value">{monitor.response_times.current} ms</span>
+
+                                        </div>
+                                        <div className="col-md-3 col-sm-6 monitor-counters">
+                                            <span className="title">Avg Response</span>
+                                            <span className="subtitle">(all-time)</span>
+                                            <span className="value">{monitor.response_times.avg.all_time.toFixed(2)} ms</span>
+                                        </div>
+                                        <div className="col-md-2 col-sm-6 monitor-counters">
+                                            <span className="title">Avg Response</span>
+                                            <span className="subtitle">(last-24-hours)</span>
+                                            <span className="value">{monitor.response_times.avg.last_24_hours.toFixed(2)} ms</span>
+                                        </div>
+                                        <div className="col-md-2 col-sm-6 monitor-counters">
+                                            <span className="title">Uptime</span>
+                                            <span className="subtitle">(all-time)</span>
+                                            <span className="value" style={{color: monitor.response_times.uptime.all_time_text_color}}>{monitor.response_times.uptime.all_time.toFixed(2)}%</span>
+                                        </div>
+                                        <div className="col-md-2 col-sm-6 monitor-counters">
+                                            <span className="title">Uptime</span>
+                                            <span className="subtitle">(last-24-hours)</span>
+                                            <span className="value" style={{color: monitor.response_times.uptime.last_24_hours_text_color}}>{monitor.response_times.uptime.last_24_hours.toFixed(2)}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {failuresChartData.labels.length ? (
+                                <div className="card bg-dark text-white mt-3">
+                                    <div className="card-body">
+                                        <div className="row">
+                                            <div className="col-md-12 monitor-response-chart">
+                                                <Line data={failuresChartData} options={options} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : null}
+                            {assertionsChartData.labels.length ? (
+                                <div className="card bg-dark text-white mt-3">
+                                    <div className="card-body">
+                                        <div className="row">
+                                            <div className="col-md-12 monitor-response-chart">
+                                                <Line data={assertionsChartData} options={options} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : null}
+                        </div>
+                    ) : null}
                 </div>
-                {monitor.id ? (
-                    <div className="col-md-8 view-monitor">
-                        <span className="monitor-name">{monitor.name}</span>
-                        <br />
-                        <a className="monitor-url" href={monitor.url} target="_blank" rel="noreferrer">{monitor.url}</a>
-
-                        <div className="mt-3 monitor-buttons">
-                            <button className="monitor-btn btn btn-primary" onClick={handlePauseOrResumeMonitor}>
-                                {monitor.is_paused ? 'resume' : 'pause'}
-                            </button>
-                            <button className="monitor-btn btn btn-secondary">Edit</button>
-                            <button className="monitor-btn btn btn-danger" onClick={handleDeleteMonitor}>Delete</button>
-                            {monitor.tags.length && (
-                                <div className="card bg-dark">
-                                    <div className="card-body p-2">
-                                        {monitor.tags.map((tag, tagIndex) => (
-                                            <span
-                                                key={`big-${tag.id}-${tagIndex}`}
-                                                style={{ backgroundColor: tag.color }}
-                                                className="monitor-tag"
-                                            >
-                                                {tag.name}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        <div className="card bg-dark text-white mt-3">
-                            <div className="card-body">
-                                <div className="monitor-big-heartbeats">
-                                    <div className="monitor-heartbeats">
-                                        {monitor.heartbeats.slice(0, BIG_HEARTBEATS_COUNT).reverse().map((heartbeat, heartbeatIndex) => (
-                                            <span
-                                                key={`big-${heartbeat.id}-${heartbeatIndex}`}
-                                                style={{ backgroundColor: heartbeat.color }}
-                                                className="monitor-heartbeat"
-                                            />
-                                        ))}
-                                    </div>
-                                    <span className="monitor-status" style={{ backgroundColor: monitor.status_color }}>{monitor.status}</span>
-                                </div>
-                                <p className="monitor-heartbeat-interval-description">Check every {monitor.heart_beat_interval} seconds</p>
-                            </div>
-                        </div>
-                        <div className="card bg-dark text-white mt-3">
-                            <div className="card-body">
-                                <div className="row">
-                                    <div className="col-md-3 col-sm-6 monitor-counters">
-                                        <span className="title">Response</span>
-                                        <span className="subtitle">(Current)</span>
-                                        <span className="value">{monitor.response_times.current} ms</span>
-
-                                    </div>
-                                    <div className="col-md-3 col-sm-6 monitor-counters">
-                                        <span className="title">Avg Response</span>
-                                        <span className="subtitle">(all-time)</span>
-                                        <span className="value">{monitor.response_times.avg.all_time.toFixed(2)} ms</span>
-                                    </div>
-                                    <div className="col-md-2 col-sm-6 monitor-counters">
-                                        <span className="title">Avg Response</span>
-                                        <span className="subtitle">(last-24-hours)</span>
-                                        <span className="value">{monitor.response_times.avg.last_24_hours.toFixed(2)} ms</span>
-                                    </div>
-                                    <div className="col-md-2 col-sm-6 monitor-counters">
-                                        <span className="title">Uptime</span>
-                                        <span className="subtitle">(all-time)</span>
-                                        <span className="value" style={{color: monitor.response_times.uptime.all_time_text_color}}>{monitor.response_times.uptime.all_time.toFixed(2)}%</span>
-                                    </div>
-                                    <div className="col-md-2 col-sm-6 monitor-counters">
-                                        <span className="title">Uptime</span>
-                                        <span className="subtitle">(last-24-hours)</span>
-                                        <span className="value" style={{color: monitor.response_times.uptime.last_24_hours_text_color}}>{monitor.response_times.uptime.last_24_hours.toFixed(2)}%</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {failuresChartData.labels.length ? (
-                            <div className="card bg-dark text-white mt-3">
-                                <div className="card-body">
-                                    <div className="row">
-                                        <div className="col-md-12 monitor-response-chart">
-                                            <Line data={failuresChartData} options={options} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : null}
-                        {assertionsChartData.labels.length ? (
-                            <div className="card bg-dark text-white mt-3">
-                                <div className="card-body">
-                                    <div className="row">
-                                        <div className="col-md-12 monitor-response-chart">
-                                            <Line data={assertionsChartData} options={options} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : null}
-                    </div>
-                ) : null}
             </div>
-        </div>
+        </>
     );
 }

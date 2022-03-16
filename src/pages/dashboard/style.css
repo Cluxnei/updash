@@ -173,3 +173,36 @@ body.no-background-image {
     font-weight: bold;
 }
 
+.new-monitor-form {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.new-monitor-form-group {
+    width: 100%;
+}
+
+.modal-50w {
+    max-width: 50vw !important;
+}
+
+.new-monitor-form-group.w-90 {
+    width: 90%;
+}
+
+.new-monitor-form-group input.form-control, .new-monitor-form-group textarea.form-control {
+    background-color: #040011;
+    color: rgb(48, 255, 29);
+}
+
+.new-monitor-form-group select.form-control {
+    background-color: #040011;
+    color: #fff;
+}
+
+.new-monitor-modal-header {
+    background: #198754;
+    color: white;
+}
