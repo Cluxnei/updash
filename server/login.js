@@ -22,7 +22,7 @@ async function handleLoginAttempt(socket, { username, password }) {
     return failed();
   }
 
-  const expiresInOneHour = new Date(Date.now() + (process.env.SESSION_EXPIRES_IN_MS || 3600000));
+  const expiresInOneHour = new Date(Date.now() + (Number(process.env.SESSION_EXPIRES_IN_MS) || 3600000));
 
   const token = uuidV4();
 

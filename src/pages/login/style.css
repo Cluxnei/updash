@@ -1,5 +1,11 @@
+
 body {
+    background-image: url("../../../public/background.png");
+    background-repeat: no-repeat;
+    background-size: auto;
+    background-position: left;
     background-color: #070022;
+    z-index: 1;
 }
 
 .login-form-container {

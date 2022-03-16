@@ -27,8 +27,8 @@ ReactDOM.render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />} />
-      <Route path="/dash" element={<Dashboard />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/dash" element={<Dashboard />} />
     </Routes>
   </BrowserRouter>,
   rootElement,
