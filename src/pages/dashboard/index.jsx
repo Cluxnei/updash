@@ -14,6 +14,7 @@ import {
 } from 'chart.js';
 import NewMonitorModal from "./new-monitor-modal";
 import Loader from "../../Loader";
+import EditMonitorModal from "./edit-monitor-modal";
 
 ChartJS.register(
     CategoryScale,
@@ -43,6 +44,16 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(false);
 
     const [showNewMonitorModal, setShowNewMonitorModal] = useState(false);
+    const [showEditMonitorModal, setShowEditMonitorModal] = useState(false);
+
+    function getLastMonitorSelectedId() {
+        return Number(sessionStorage.getItem('@@lastMonitorSelectedId')) || null;
+    }
+
+    function setLastMonitorSelectedId(id) {
+        sessionStorage.setItem('@@lastMonitorSelectedId', String(id));
+    }
+
 
     const [monitors, setMonitors] = useState([]);
     const [monitor, setMonitor] = useState({});
@@ -91,6 +102,16 @@ export default function Dashboard() {
             setLoading(false);
             setMonitors(data);
             if (data.length) {
+                const lastMonitorSelectedId = getLastMonitorSelectedId();
+                if (lastMonitorSelectedId) {
+                    const selectedMonitorIndex = data.findIndex(m => m.id === lastMonitorSelectedId);
+                    if (selectedMonitorIndex !== -1) {
+                        setMonitor(data[selectedMonitorIndex]);
+                        return;
+                    }
+                    setMonitor(data[0]);
+                    return;
+                }
                 setMonitor(data[0]);
             }
         });
@@ -138,9 +159,22 @@ export default function Dashboard() {
             socket.off('monitor-created', call);
         };
     }, [monitors]);
+    
+    useEffect(() => {
+        const call = () => {
+            setShowEditMonitorModal(false);
+            setLoading(false);
+            getMonitors();
+        };
+        socket.on('monitor-edited', call);
+        return () => {
+            socket.off('monitor-edited', call);
+        };
+    }, [monitors]);
 
     function handleMonitorClick(_monitor) {
         setMonitor(_monitor);
+        setLastMonitorSelectedId(_monitor.id);
     }
 
     function handlePauseOrResumeMonitor() {
@@ -220,6 +254,54 @@ export default function Dashboard() {
         setLoading(true);
     }
 
+    function handleEditMonitorFormSubmit(event) {
+        event.preventDefault();
+
+        const normalize = (value) => {
+            const v = value.trim();
+            return v.length ? v : null;
+        };
+        const _editedMonitor = {
+            id: normalize(document.getElementById('edit-monitor-id').value),
+            name: normalize(document.getElementById('edit-monitor-name').value),
+            url: normalize(document.getElementById('edit-monitor-url').value),
+            description: normalize(document.getElementById('edit-monitor-description').value),
+            heart_beat_interval: normalize(document.getElementById('edit-monitor-interval').value),
+            min_fail_attemps_to_down: normalize(document.getElementById('edit-monitor-min-attemps-to-down').value),
+            max_redirects: normalize(document.getElementById('edit-monitor-max-redirects').value),
+            min_acceptable_status_code: normalize(document.getElementById('edit-monitor-min-acceptable-status-code').value),
+            max_acceptable_status_code: normalize(document.getElementById('edit-monitor-max-acceptable-status-code').value),
+            type: normalize(document.getElementById('edit-monitor-type').value),
+            method: normalize(document.getElementById('edit-monitor-method').value),
+            headers: normalize(document.getElementById('edit-monitor-headers').value),
+            body: normalize(document.getElementById('edit-monitor-body').value),
+        };
+
+        const requiredFields = [
+            'id',
+            'name',
+            'url',
+            'heart_beat_interval',
+            'min_fail_attemps_to_down',
+            'max_redirects',
+            'min_acceptable_status_code',
+            'max_acceptable_status_code',
+            'type',
+            'method',
+        ];
+
+        const errors = requiredFields.filter(field => !_editedMonitor[field]);
+
+        if (errors.length) {
+            toastError(`${errors.join(', ')} are required`);
+            return;
+        }
+
+        emmit(socket, 'edit-monitor', {monitor: _editedMonitor});
+
+        setLoading(true);
+    }
+
     useEffect(() => {
         let mounted = true;
         if (!monitor.id || !mounted) {
@@ -263,7 +345,19 @@ export default function Dashboard() {
 
     return (
         <>
-            <NewMonitorModal show={showNewMonitorModal} onHide={() => setShowNewMonitorModal(false)} handleSubmit={handleNewMonitorFormSubmit} />
+            <NewMonitorModal 
+                show={showNewMonitorModal} 
+                onHide={() => setShowNewMonitorModal(false)} 
+                handleSubmit={handleNewMonitorFormSubmit} 
+            />
+            {monitor && monitor.id ? (
+                <EditMonitorModal 
+                    show={showEditMonitorModal} 
+                    onHide={() => setShowEditMonitorModal(false)} 
+                    handleSubmit={handleEditMonitorFormSubmit} 
+                    monitor={monitor} 
+                />
+            ) : null}
             <div className="container-fluid">
                 <div className="row">
                     <div className="col-md-12 text-white">
@@ -333,12 +427,11 @@ export default function Dashboard() {
                             <span className="monitor-name">{monitor.name}</span>
                             <br />
                             <a className="monitor-url" href={monitor.url} target="_blank" rel="noreferrer">{monitor.url}</a>
-
                             <div className="mt-3 monitor-buttons">
                                 <button className="monitor-btn btn btn-primary" onClick={handlePauseOrResumeMonitor}>
                                     {monitor.is_paused ? 'resume' : 'pause'}
                                 </button>
-                                <button className="monitor-btn btn btn-secondary">Edit</button>
+                                <button className="monitor-btn btn btn-secondary" onClick={() => setShowEditMonitorModal(true)}>Edit</button>
                                 <button className="monitor-btn btn btn-danger" onClick={handleDeleteMonitor}>Delete</button>
                                 {monitor.tags.length && (
                                     <div className="card bg-dark">

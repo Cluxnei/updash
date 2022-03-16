@@ -226,6 +226,14 @@ async function handleCreateMonitor(socket, {__user, monitor}) {
   socket.emit('monitor-created', {monitorId: lastInsertId});
 }
 
+async function handleEditMonitor(socket, {monitor}) {
+  await _update('monitors', {
+    ...monitor,
+    updated_at: currentTimestamp(),
+  }, 'id = ?', [monitor.id]);
+  socket.emit('monitor-edited');
+}
+
 async function computeMonitorStatus(monitor) {
   const lastHeartbeats = await _select(['is_failed'], 'monitor_heart_beats', `${SOFT_DELETES_WHERE} AND monitor_id = ?`, [monitor.id], 'created_at DESC', monitor.min_fail_attemps_to_down);
   const lastHeartbeatsFailed = lastHeartbeats.filter((heartbeat) => heartbeat.is_failed);
@@ -326,4 +334,5 @@ module.exports = {
   handleResumeMonitor,
   handleDeleteMonitor,
   handleCreateMonitor,
+  handleEditMonitor,
 };

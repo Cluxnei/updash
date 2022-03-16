@@ -1,5 +1,5 @@
 const {
-  handleGetMonitors, handlePauseMonitor, handleResumeMonitor, handleDeleteMonitor, handleCreateMonitor
+  handleGetMonitors, handlePauseMonitor, handleResumeMonitor, handleDeleteMonitor, handleCreateMonitor, handleEditMonitor
 } = require('./monitor');
 const { handleLoginAttempt, handleUserTokenExpired, getUserByToken } = require('./login');
 const { log } = require('./helpers');
@@ -20,6 +20,7 @@ function socketRoutes(socket) {
   socket.on('resume-monitor', (data) => middleware(socket, data, ({__user}) => handleResumeMonitor(socket, {...data, __user})));
   socket.on('delete-monitor', (data) => middleware(socket, data, ({__user}) => handleDeleteMonitor(socket, {...data, __user})));
   socket.on('create-monitor', (data) => middleware(socket, data, ({__user}) => handleCreateMonitor(socket, {...data, __user})));
+  socket.on('edit-monitor', (data) => middleware(socket, data, ({__user}) => handleEditMonitor(socket, {...data, __user})));
 }
 
 module.exports = {
