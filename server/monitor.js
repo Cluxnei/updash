@@ -159,14 +159,14 @@ async function fillMonitorsData(_monitors) {
   return monitors;
 }
 
-async function getMonitors() {
-  const monitors = await _select(['*'], 'monitors', SOFT_DELETES_WHERE);
+async function getMonitors(user) {
+  const monitors = await _select(['*'], 'monitors', `${SOFT_DELETES_WHERE} AND owner_id = ?`, [user.id]);
   log({ id: 'monitor.js' }, `Got ${monitors.length} monitors`);
   return fillMonitorsData(monitors);
 }
 
-async function handleGetMonitors(socket) {
-  socket.emit('monitors-list', await getMonitors());
+async function handleGetMonitors(socket, {__user}) {
+  socket.emit('monitors-list', await getMonitors(__user));
 }
 
 async function handlePauseMonitor(socket, {__user, monitorId}) {
