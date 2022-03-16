@@ -253,7 +253,7 @@ function resolveFailedErrorToText(error) {
   if (error.code === 'ETIMEDOUT') {
     return 'Timed out';
   }
-  return 'Unknown error';
+  return error.code;
 }
 
 async function runMonitor(broadcastSocket, _monitor) {
