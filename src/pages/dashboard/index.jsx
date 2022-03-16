@@ -87,6 +87,8 @@ export default function Dashboard() {
         emmit(socket, 'get-monitors');
     }
 
+    const reloadMonitorsCallback = () => getMonitors();
+
     useEffect(() => {
         document.title = 'Dashboard';
         document.body.classList.add('no-background-image');
@@ -115,8 +117,6 @@ export default function Dashboard() {
                 setMonitor(data[0]);
             }
         });
-
-        const reloadMonitorsCallback = () => getMonitors();
 
         socket.on('monitor-paused', reloadMonitorsCallback);
         socket.on('monitor-resumed', reloadMonitorsCallback);
@@ -208,28 +208,33 @@ export default function Dashboard() {
         });
     }
 
+    const normalize = (value) => {
+        const v = value.trim();
+        return v.length ? v : null;
+    };
+    
+    function extractMonitorFromForm(prefix) {
+        return {
+            name: normalize(document.getElementById(`${prefix}-name`).value),
+            url: normalize(document.getElementById(`${prefix}-url`).value),
+            description: normalize(document.getElementById(`${prefix}-description`).value),
+            heart_beat_interval: normalize(document.getElementById(`${prefix}-interval`).value),
+            min_fail_attemps_to_down: normalize(document.getElementById(`${prefix}-min-attemps-to-down`).value),
+            max_redirects: normalize(document.getElementById(`${prefix}-max-redirects`).value),
+            min_acceptable_status_code: normalize(document.getElementById(`${prefix}-min-acceptable-status-code`).value),
+            max_acceptable_status_code: normalize(document.getElementById(`${prefix}-max-acceptable-status-code`).value),
+            type: normalize(document.getElementById(`${prefix}-type`).value),
+            method: normalize(document.getElementById(`${prefix}-method`).value),
+            headers: normalize(document.getElementById(`${prefix}-headers`).value),
+            body: normalize(document.getElementById(`${prefix}-body`).value),
+        };
+    }
+
     function handleNewMonitorFormSubmit(event) {
         event.preventDefault();
 
-        const normalize = (value) => {
-            const v = value.trim();
-            return v.length ? v : null;
-        };
-        const _newMonitor = {
-            name: normalize(document.getElementById('new-monitor-name').value),
-            url: normalize(document.getElementById('new-monitor-url').value),
-            description: normalize(document.getElementById('new-monitor-description').value),
-            heart_beat_interval: normalize(document.getElementById('new-monitor-interval').value),
-            min_fail_attemps_to_down: normalize(document.getElementById('new-monitor-min-attemps-to-down').value),
-            max_redirects: normalize(document.getElementById('new-monitor-max-redirects').value),
-            min_acceptable_status_code: normalize(document.getElementById('new-monitor-min-acceptable-status-code').value),
-            max_acceptable_status_code: normalize(document.getElementById('new-monitor-max-acceptable-status-code').value),
-            type: normalize(document.getElementById('new-monitor-type').value),
-            method: normalize(document.getElementById('new-monitor-method').value),
-            headers: normalize(document.getElementById('new-monitor-headers').value),
-            body: normalize(document.getElementById('new-monitor-body').value),
-        };
-
+        const _newMonitor = extractMonitorFromForm('new-monitor');
+        
         const requiredFields = [
             'name',
             'url',
@@ -257,24 +262,9 @@ export default function Dashboard() {
     function handleEditMonitorFormSubmit(event) {
         event.preventDefault();
 
-        const normalize = (value) => {
-            const v = value.trim();
-            return v.length ? v : null;
-        };
         const _editedMonitor = {
             id: normalize(document.getElementById('edit-monitor-id').value),
-            name: normalize(document.getElementById('edit-monitor-name').value),
-            url: normalize(document.getElementById('edit-monitor-url').value),
-            description: normalize(document.getElementById('edit-monitor-description').value),
-            heart_beat_interval: normalize(document.getElementById('edit-monitor-interval').value),
-            min_fail_attemps_to_down: normalize(document.getElementById('edit-monitor-min-attemps-to-down').value),
-            max_redirects: normalize(document.getElementById('edit-monitor-max-redirects').value),
-            min_acceptable_status_code: normalize(document.getElementById('edit-monitor-min-acceptable-status-code').value),
-            max_acceptable_status_code: normalize(document.getElementById('edit-monitor-max-acceptable-status-code').value),
-            type: normalize(document.getElementById('edit-monitor-type').value),
-            method: normalize(document.getElementById('edit-monitor-method').value),
-            headers: normalize(document.getElementById('edit-monitor-headers').value),
-            body: normalize(document.getElementById('edit-monitor-body').value),
+            ...extractMonitorFromForm('edit-monitor')
         };
 
         const requiredFields = [
