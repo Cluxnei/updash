@@ -6,7 +6,7 @@ import Dashboard from './pages/dashboard';
 import Login from './pages/login';
 import App from './App';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { createSocket, handleTokenExpired, toastError } from './helpers';
+import { createSocket, handleTokenExpired, toastError, toastSuccess } from './helpers';
 
 const rootElement = document.getElementById('root');
 
@@ -19,8 +19,12 @@ socket.on('login-token-expired', ({token}) => {
   }
 });
 
-socket.on('error-message', (message) => {
+socket.on('error-message', ({message}) => {
   toastError(message);
+});
+
+socket.on('success-message', ({message}) => {
+  toastSuccess(message);
 });
 
 ReactDOM.render(

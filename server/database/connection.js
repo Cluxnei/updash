@@ -52,6 +52,10 @@ function dbInsert(table, object) {
   return dbQuery(sql, Object.values(object));
 }
 
+function dbLastInsertId() {
+  return dbQuery('SELECT LAST_INSERT_ID() AS id').then((rows) => rows[0].id);
+}
+
 function dbInsertMany(table, fields, values) {
   const sql = `INSERT INTO ${table} (${fields}) VALUES ${values.map(() => `(${values.map(escape).join(',')})`).join(',')}`;
   return dbQuery(sql);
@@ -75,6 +79,7 @@ module.exports = {
   _query: dbQuery,
   _select: dbSelect,
   _insert: dbInsert,
+  _lastInsertId: dbLastInsertId,
   _update: dbUpdate,
   _delete: dbDelete,
   _insert_many: dbInsertMany,

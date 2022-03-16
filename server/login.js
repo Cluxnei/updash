@@ -70,7 +70,6 @@ async function handleUserTokenExpired(socket, token) {
   if (expiresAt < new Date()) {
     return failed();
   }
-
   return false;
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createSocket, emmit, isUserLoggedIn, MySwal } from "../../helpers";
+import { createSocket, emmit, isUserLoggedIn, MySwal, toastError } from "../../helpers";
 import './style.css';
 import { Line } from "react-chartjs-2";
 import {
@@ -13,6 +13,7 @@ import {
     Legend,
 } from 'chart.js';
 import NewMonitorModal from "./new-monitor-modal";
+import Loader from "../../Loader";
 
 ChartJS.register(
     CategoryScale,
@@ -39,6 +40,8 @@ const BIG_HEARTBEATS_COUNT = 33;
 const socket = createSocket();
 
 export default function Dashboard() {
+    const [loading, setLoading] = useState(false);
+
     const [showNewMonitorModal, setShowNewMonitorModal] = useState(false);
 
     const [monitors, setMonitors] = useState([]);
@@ -66,54 +69,37 @@ export default function Dashboard() {
         ],
     });
 
+    function getMonitors() {
+        setLoading(true);
+        setMonitors([]);
+        setMonitor({});
+        emmit(socket, 'get-monitors');
+    }
+
     useEffect(() => {
         document.title = 'Dashboard';
         document.body.classList.add('no-background-image');
+
         if (!isUserLoggedIn()) {
             window.location.href = '/';
             return;
         }
 
-        emmit(socket, 'get-monitors');
+        getMonitors();
 
         socket.on('monitors-list', (data) => {
+            setLoading(false);
             setMonitors(data);
             if (data.length) {
                 setMonitor(data[0]);
             }
         });
 
-        const pauseOrResumeMonitorCallback = (data) => {
-            const _monitorIndex = monitors.findIndex(_monitor => _monitor.id === data.id);
-            if (_monitorIndex === -1) {
-                return;
-            }
-            if (monitor.id === data.id) {
-                setMonitor((oldMonitor) => ({
-                    ...oldMonitor,
-                    is_paused: data.is_paused,
-                }));
-            }
-            setMonitors((oldMonitors) => {
-                const _monitors = [...oldMonitors];
-                _monitors[_monitorIndex] = {
-                    ...oldMonitors[_monitorIndex],
-                    is_paused: data.is_paused,
-                };
-                return _monitors;
-            });
-        };
+        const reloadMonitorsCallback = () => getMonitors();
 
-        socket.on('monitor-paused', pauseOrResumeMonitorCallback);
-        socket.on('monitor-resumed', pauseOrResumeMonitorCallback);
-        socket.on('monitor-deleted', (data) => {
-            setMonitors((oldMonitors) => {
-                return oldMonitors.filter(_monitor => _monitor.id !== data.id);
-            });
-            if (monitor.id === data.id) {
-                setMonitor({});
-            }
-        });
+        socket.on('monitor-paused', reloadMonitorsCallback);
+        socket.on('monitor-resumed', reloadMonitorsCallback);
+        socket.on('monitor-deleted', reloadMonitorsCallback);
 
     }, []);
 
@@ -141,11 +127,24 @@ export default function Dashboard() {
         };
     }, [monitors]);
 
+    useEffect(() => {
+        const call = () => {
+            setShowNewMonitorModal(false);
+            setLoading(false);
+            getMonitors();
+        };
+        socket.on('monitor-created', call);
+        return () => {
+            socket.off('monitor-created', call);
+        };
+    }, [monitors]);
+
     function handleMonitorClick(_monitor) {
         setMonitor(_monitor);
     }
 
     function handlePauseOrResumeMonitor() {
+        setLoading(true);
         if (monitor.is_paused) {
             emmit(socket, 'resume-monitor', {
                 monitorId: monitor.id,
@@ -173,6 +172,52 @@ export default function Dashboard() {
         emmit(socket, 'delete-monitor', {
             monitorId: monitor.id,
         });
+    }
+
+    function handleNewMonitorFormSubmit(event) {
+        event.preventDefault();
+
+        const normalize = (value) => {
+            const v = value.trim();
+            return v.length ? v : null;
+        };
+        const _newMonitor = {
+            name: normalize(document.getElementById('new-monitor-name').value),
+            url: normalize(document.getElementById('new-monitor-url').value),
+            description: normalize(document.getElementById('new-monitor-description').value),
+            heart_beat_interval: normalize(document.getElementById('new-monitor-interval').value),
+            min_fail_attemps_to_down: normalize(document.getElementById('new-monitor-min-attemps-to-down').value),
+            max_redirects: normalize(document.getElementById('new-monitor-max-redirects').value),
+            min_acceptable_status_code: normalize(document.getElementById('new-monitor-min-acceptable-status-code').value),
+            max_acceptable_status_code: normalize(document.getElementById('new-monitor-max-acceptable-status-code').value),
+            type: normalize(document.getElementById('new-monitor-type').value),
+            method: normalize(document.getElementById('new-monitor-method').value),
+            headers: normalize(document.getElementById('new-monitor-headers').value),
+            body: normalize(document.getElementById('new-monitor-body').value),
+        };
+
+        const requiredFields = [
+            'name',
+            'url',
+            'heart_beat_interval',
+            'min_fail_attemps_to_down',
+            'max_redirects',
+            'min_acceptable_status_code',
+            'max_acceptable_status_code',
+            'type',
+            'method',
+        ];
+
+        const errors = requiredFields.filter(field => !_newMonitor[field]);
+
+        if (errors.length) {
+            toastError(`${errors.join(', ')} are required`);
+            return;
+        }
+
+        emmit(socket, 'create-monitor', {monitor: _newMonitor});
+
+        setLoading(true);
     }
 
     useEffect(() => {
@@ -211,9 +256,14 @@ export default function Dashboard() {
         };
     }, [monitor]);
 
+    if (loading) {
+        return <Loader />;
+    }
+
+
     return (
         <>
-            <NewMonitorModal show={showNewMonitorModal} onHide={() => setShowNewMonitorModal(false)} />
+            <NewMonitorModal show={showNewMonitorModal} onHide={() => setShowNewMonitorModal(false)} handleSubmit={handleNewMonitorFormSubmit} />
             <div className="container-fluid">
                 <div className="row">
                     <div className="col-md-12 text-white">

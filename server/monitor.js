@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 const { default: axios } = require('axios');
 const {
-  _select, _insert, _update, _query, SOFT_DELETES_WHERE,
+  _select, _insert, _update, _query, SOFT_DELETES_WHERE, _lastInsertId,
 } = require('./database/connection');
 const { currentTimestamp, isToday, log } = require('./helpers');
 
@@ -126,20 +126,21 @@ async function fillMonitorData(m) {
   ]);
   monitor.tags = fillTagsData(tags);
   monitor.heartbeats = fillHeartbeatsData(heartbeats);
+  const zeroSafa = (n) => (n === null || typeof n === 'undefined' ? 0 : n);
   monitor.response_times = {
-    current: heartbeats[0]?.response_time,
+    current: zeroSafa(heartbeats[0]?.response_time),
     avg: {
-      all_time: response_time_avg_all_time,
-      last_24_hours: response_time_avg_last_24_hours,
+      all_time: zeroSafa(response_time_avg_all_time),
+      last_24_hours: zeroSafa(response_time_avg_last_24_hours),
     },
     uptime: {
-      all_time: uptime_percentage,
-      all_time_text_color: uptimeColorByPercentage(uptime_percentage),
-      last_24_hours: uptime_percentage_last_24_hours,
-      last_24_hours_text_color: uptimeColorByPercentage(uptime_percentage_last_24_hours),
+      all_time: zeroSafa(uptime_percentage),
+      all_time_text_color: uptimeColorByPercentage(zeroSafa(uptime_percentage)),
+      last_24_hours: zeroSafa(uptime_percentage_last_24_hours),
+      last_24_hours_text_color: uptimeColorByPercentage(zeroSafa(uptime_percentage_last_24_hours)),
     },
   };
-  monitor.uptime_percentage = uptime_percentage;
+  monitor.uptime_percentage = zeroSafa(uptime_percentage);
   monitor.uptime_color = monitor.status === 'up' ? 'green' : 'red';
   monitor.status_color = monitor.status === 'down' ? 'red' : 'green';
   return monitor;
@@ -169,7 +170,7 @@ async function handleGetMonitors(socket) {
 }
 
 async function handlePauseMonitor(socket, {__user, monitorId}) {
-  const monitor = await _select(['owner_id'], 'monitors', `${SOFT_DELETES_WHERE} AND id = ?`, [monitorId], null, 1);
+  const [monitor] = await _select(['owner_id'], 'monitors', `${SOFT_DELETES_WHERE} AND id = ?`, [monitorId], null, 1);
   if (__user.id !== monitor.owner_id) {
     socket.emit('error-message', {
       message: 'You are not the owner of this monitor',
@@ -184,7 +185,7 @@ async function handlePauseMonitor(socket, {__user, monitorId}) {
 }
 
 async function handleResumeMonitor(socket, {__user, monitorId}) {
-  const monitor = await _select(['owner_id'], 'monitors', `${SOFT_DELETES_WHERE} AND id = ?`, [monitorId], null, 1);
+  const [monitor] = await _select(['owner_id'], 'monitors', `${SOFT_DELETES_WHERE} AND id = ?`, [monitorId], null, 1);
   if (__user.id !== monitor.owner_id) {
     socket.emit('error-message', {
       message: 'You are not the owner of this monitor',
@@ -199,7 +200,7 @@ async function handleResumeMonitor(socket, {__user, monitorId}) {
 }
 
 async function handleDeleteMonitor(socket, {__user, monitorId}) {
-  const monitor = await _select(['owner_id'], 'monitors', `${SOFT_DELETES_WHERE} AND id = ?`, [monitorId], null, 1);
+  const [monitor] = await _select(['owner_id'], 'monitors', `${SOFT_DELETES_WHERE} AND id = ?`, [monitorId], null, 1);
   if (__user.id !== monitor.owner_id) {
     socket.emit('error-message', {
       message: 'You are not the owner of this monitor',
@@ -212,6 +213,17 @@ async function handleDeleteMonitor(socket, {__user, monitorId}) {
     id: monitorId,
     deleted_at: timestamp,
   });
+}
+
+async function handleCreateMonitor(socket, {__user, monitor}) {
+  await _insert('monitors', {
+    ...monitor,
+    owner_id: __user.id,
+  });
+  const lastInsertId = await _lastInsertId();
+  // const freshMonitor = await _select(['*'], 'monitors', `${SOFT_DELETES_WHERE} AND id = ?`, [lastInsertId], null, 1);
+  // const filledMonitor = await fillMonitorData(freshMonitor);
+  socket.emit('monitor-created', {monitorId: lastInsertId});
 }
 
 async function computeMonitorStatus(monitor) {
@@ -304,4 +316,5 @@ module.exports = {
   handlePauseMonitor,
   handleResumeMonitor,
   handleDeleteMonitor,
+  handleCreateMonitor,
 };

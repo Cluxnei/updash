@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { isUserLoggedIn } from './helpers';
-
-import loadingSvg from './assets/loading.svg';
+import Loader from './Loader';
 
 function App() {
   useEffect(() => {
@@ -17,11 +16,7 @@ function App() {
     navAsync('/login');
   }, []);
 
-  return (
-    <div className='loading-container'>
-      <img src={loadingSvg} alt="loading" />  
-    </div>
-  );
+  return <Loader />;
 }
 
 export default App;
