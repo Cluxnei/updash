@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createSocket, emmit, isUserLoggedIn, MySwal, syntaxHighlight, toastError } from "../../helpers";
+import { createSocket, emmit, isUserLoggedIn, MySwal, syntaxHighlight, toastError, toastSuccess } from "../../helpers";
 import './style.css';
 import { Line } from "react-chartjs-2";
 import {
@@ -141,6 +141,11 @@ export default function Dashboard() {
                 }
                 return monitors[currentMonitorIndex];
             });
+            if (data.hbStatus) {
+                data.isFailed 
+                    ? toastError(`${data.monitor.name}: [${data.hbStatus}]`)
+                    : toastSuccess(`${data.monitor.name}: [${data.hbStatus}]`);
+            }
         };
         socket.on('monitor-runned', call);
         return () => {
@@ -212,7 +217,7 @@ export default function Dashboard() {
         const v = value.trim();
         return v.length ? v : null;
     };
-    
+
     function extractMonitorFromForm(prefix) {
         return {
             name: normalize(document.getElementById(`${prefix}-name`).value),

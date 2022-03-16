@@ -243,6 +243,19 @@ async function computeMonitorStatus(monitor) {
   return 'up';
 }
 
+function resolveFailedErrorToText(error) {
+  if (error.code === 'ENOTFOUND') {
+    return 'Not found';
+  }
+  if (error.code === 'ECONNREFUSED') {
+    return 'Connection refused';
+  }
+  if (error.code === 'ETIMEDOUT') {
+    return 'Timed out';
+  }
+  return 'Unknown error';
+}
+
 async function runMonitor(broadcastSocket, _monitor) {
   const monitor = { ..._monitor };
   log({ id: 'monitor.js' }, `Running monitor ${monitor.id}`);
@@ -254,6 +267,8 @@ async function runMonitor(broadcastSocket, _monitor) {
     }
     return JSON.stringify(value);
   };
+  let hbStatus = null;
+  let isFailed = false;
   try {
     const response = await axios.call(monitor.method, monitor.url, {
       timeout: FIXED_MONITOR_TIMEOUT,
@@ -271,6 +286,7 @@ async function runMonitor(broadcastSocket, _monitor) {
       is_failed: false,
       response: safeString(response.data),
     });
+    hbStatus = response.status;
   } catch (err) {
     if (err.response) {
       await _insert('monitor_heart_beats', {
@@ -280,6 +296,8 @@ async function runMonitor(broadcastSocket, _monitor) {
         is_failed: true,
         response: err.response.data,
       });
+      hbStatus = err.response.status;
+      isFailed = true;
       log({ id: 'monitor.js' }, `Monitor ${monitor.id} failed with status ${err.response.status}`);
       return;
     }
@@ -290,6 +308,8 @@ async function runMonitor(broadcastSocket, _monitor) {
         response_time: getResponseTime(),
         is_failed: true,
       });
+      hbStatus = resolveFailedErrorToText(err);
+      isFailed = true;
       log({ id: 'monitor.js' }, `Monitor ${monitor.id} failed with timeout`);
       return;
     }
@@ -304,6 +324,8 @@ async function runMonitor(broadcastSocket, _monitor) {
     broadcastSocket.emit('monitor-runned', {
       monitor_id: monitor.id,
       monitor: await fillMonitorData(monitor),
+      hbStatus,
+      isFailed,
     });
   }
 }
