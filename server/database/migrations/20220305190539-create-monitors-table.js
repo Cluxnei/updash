@@ -12,6 +12,14 @@ module.exports = {
         allowNull: false,
         defaultValue: false,
       },
+      owner_id: {
+        type: Sequelize.BIGINT,
+        allowNull: false,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+      },
       name: {
         type: Sequelize.STRING,
         allowNull: false,

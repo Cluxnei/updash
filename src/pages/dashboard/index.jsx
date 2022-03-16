@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createSocket, isUserLoggedIn, MySwal } from "../../helpers";
+import { createSocket, emmit, getUserToken, isUserLoggedIn, MySwal } from "../../helpers";
 import './style.css';
 import { Line } from "react-chartjs-2";
 import {
@@ -67,11 +67,11 @@ export default function Dashboard() {
     useEffect(() => {
         document.title = 'Dashboard';
         if (!isUserLoggedIn()) {
-            window.location.href = '/login';
+            window.location.href = '/';
             return;
         }
 
-        socket.emit('get-monitors');
+        emmit(socket, 'get-monitors');
 
         socket.on('monitors-list', (data) => {
             setMonitors(data);
@@ -144,10 +144,14 @@ export default function Dashboard() {
 
     function handlePauseOrResumeMonitor() {
         if (monitor.is_paused) {
-            socket.emit('resume-monitor', monitor.id);
+            emmit(socket, 'resume-monitor', {
+                monitorId: monitor.id,
+            });
             return;
         }
-        socket.emit('pause-monitor', monitor.id);
+        emmit(socket, 'pause-monitor', {
+            monitorId: monitor.id,
+        });
     }
 
     async function handleDeleteMonitor() {
@@ -163,7 +167,9 @@ export default function Dashboard() {
         if (!value) {
             return;
         }
-        socket.emit('delete-monitor', monitor.id);
+        emmit(socket, 'delete-monitor', {
+            monitorId: monitor.id,
+        });
     }
 
     useEffect(() => {

@@ -28,6 +28,10 @@ module.exports = {
         allowNull: false,
         defaultValue: false,
       },
+      response: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,

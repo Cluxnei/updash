@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { authenticateUser, createSocket, isUserLoggedIn, Toast } from "../../helpers";
+import { authenticateUser, createSocket, emmit, isUserLoggedIn, Toast, toastError, toastSuccess } from "../../helpers";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './style.css';
 
@@ -7,28 +7,21 @@ const socket = createSocket();
 
 export default function Login() {
 
-
     useEffect(() => {
         document.title = 'Login';
         if (isUserLoggedIn()) {
-            window.location.href = '/dash';
+            window.location.href = '/';
             return;
         }
 
-        socket.on('successful-login', ({username, expires, message}) => {
-            Toast.fire({
-                icon: 'success',
-                title: message,
-            });
-            authenticateUser(username, expires);
-            window.location.href = '/dash';
+        socket.on('successful-login', ({user, expires, message}) => {
+            toastSuccess(message);
+            authenticateUser(user, expires);
+            window.location.href = '/';
         });
 
-        socket.on('failed-login', (data) => {
-            Toast.fire({
-                icon: 'error',
-                title: data.message,
-            });
+        socket.on('failed-login', ({message}) => {
+            toastError(message);
         });
 
     }, []);
@@ -39,14 +32,10 @@ export default function Login() {
         const password = document.getElementById('password').value;
 
         if (!username || !password || username.trim().length === 0 || password.trim().length === 0) {
-            Toast.fire({
-                icon: 'error',
-                title: 'Please fill in all fields',
-            });
+            toastError('Please fill in all fields');
             return;
         }
-
-        socket.emit('login-attempt', { username, password });
+        emmit(socket, 'login-attempt', { username, password });
     }
 
     return (

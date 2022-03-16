@@ -168,7 +168,14 @@ async function handleGetMonitors(socket) {
   socket.emit('monitors-list', await getMonitors());
 }
 
-async function handlePauseMonitor(socket, monitorId) {
+async function handlePauseMonitor(socket, {__user, monitorId}) {
+  const monitor = await _select(['owner_id'], 'monitors', `${SOFT_DELETES_WHERE} AND id = ?`, [monitorId], null, 1);
+  if (__user.id !== monitor.owner_id) {
+    socket.emit('error-message', {
+      message: 'You are not the owner of this monitor',
+    });
+    return;
+  }
   await _update('monitors', { is_paused: 1, updated_at: currentTimestamp() }, 'id = ?', [monitorId]);
   socket.emit('monitor-paused', {
     id: monitorId,
@@ -176,7 +183,14 @@ async function handlePauseMonitor(socket, monitorId) {
   });
 }
 
-async function handleResumeMonitor(socket, monitorId) {
+async function handleResumeMonitor(socket, {__user, monitorId}) {
+  const monitor = await _select(['owner_id'], 'monitors', `${SOFT_DELETES_WHERE} AND id = ?`, [monitorId], null, 1);
+  if (__user.id !== monitor.owner_id) {
+    socket.emit('error-message', {
+      message: 'You are not the owner of this monitor',
+    });
+    return;
+  }
   await _update('monitors', { is_paused: 0, updated_at: currentTimestamp() }, 'id = ?', [monitorId]);
   socket.emit('monitor-resumed', {
     id: monitorId,
@@ -184,7 +198,14 @@ async function handleResumeMonitor(socket, monitorId) {
   });
 }
 
-async function handleDeleteMonitor(socket, monitorId) {
+async function handleDeleteMonitor(socket, {__user, monitorId}) {
+  const monitor = await _select(['owner_id'], 'monitors', `${SOFT_DELETES_WHERE} AND id = ?`, [monitorId], null, 1);
+  if (__user.id !== monitor.owner_id) {
+    socket.emit('error-message', {
+      message: 'You are not the owner of this monitor',
+    });
+    return;
+  }
   const timestamp = currentTimestamp();
   await _update('monitors', { deleted_at: timestamp, updated_at: timestamp }, 'id = ?', [monitorId]);
   socket.emit('monitor-deleted', {

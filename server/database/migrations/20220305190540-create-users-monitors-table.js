@@ -1,25 +1,27 @@
+'use strict';
+
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('monitor_tags', {
+  async up (queryInterface, Sequelize) {
+    await queryInterface.createTable('users_monitors', { 
       id: {
         type: Sequelize.BIGINT,
         primaryKey: true,
         allowNull: false,
         autoIncrement: true,
       },
+      user_id: {
+        type: Sequelize.BIGINT,
+        allowNull: false,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+      },
       monitor_id: {
         type: Sequelize.BIGINT,
         allowNull: false,
         references: {
           model: 'monitors',
-          key: 'id',
-        },
-      },
-      tag_id: {
-        type: Sequelize.BIGINT,
-        allowNull: false,
-        references: {
-          model: 'tags',
           key: 'id',
         },
       },
@@ -31,7 +33,7 @@ module.exports = {
     });
   },
 
-  async down(queryInterface) {
-    await queryInterface.dropTable('monitor_tags');
-  },
+  async down (queryInterface, Sequelize) {
+     await queryInterface.dropTable('users_monitors');
+  }
 };
