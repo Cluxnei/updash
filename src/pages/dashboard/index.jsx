@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createSocket, emmit, isUserLoggedIn, MySwal, toastError } from "../../helpers";
+import { createSocket, emmit, isUserLoggedIn, MySwal, syntaxHighlight, toastError } from "../../helpers";
 import './style.css';
 import { Line } from "react-chartjs-2";
 import {
@@ -416,6 +416,7 @@ export default function Dashboard() {
                                     </div>
                                 </div>
                             ) : null}
+
                             {assertionsChartData.labels.length ? (
                                 <div className="card bg-dark text-white mt-3">
                                     <div className="card-body">
@@ -423,6 +424,25 @@ export default function Dashboard() {
                                             <div className="col-md-12 monitor-response-chart">
                                                 <Line data={assertionsChartData} options={options} />
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : null}
+
+                            {monitor.heartbeats.length ? (
+                                <div className="card bg-dark text-white mt-3">
+                                    <div className="card-title">
+                                        <h5>Last Heartbeat Response</h5>
+                                    </div>
+                                    <div className="card-body">
+                                        <div className="row">
+                                            <code>
+                                                <pre 
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: syntaxHighlight(monitor.heartbeats[monitor.heartbeats.length - 1].response)
+                                                    }} 
+                                                />
+                                            </code>
                                         </div>
                                     </div>
                                 </div>

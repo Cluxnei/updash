@@ -240,6 +240,12 @@ async function runMonitor(broadcastSocket, _monitor) {
   log({ id: 'monitor.js' }, `Running monitor ${monitor.id}`);
   const startTime = Date.now();
   const getResponseTime = () => Date.now() - startTime;
+  const safeString = (value) => {
+    if (typeof value === 'string' || typeof value === 'number') {
+      return value;
+    }
+    return JSON.stringify(value);
+  };
   try {
     const response = await axios.call(monitor.method, monitor.url, {
       timeout: FIXED_MONITOR_TIMEOUT,
@@ -255,6 +261,7 @@ async function runMonitor(broadcastSocket, _monitor) {
       status_code: response.status,
       response_time: getResponseTime(),
       is_failed: false,
+      response: safeString(response.data),
     });
   } catch (err) {
     if (err.response) {
@@ -263,6 +270,7 @@ async function runMonitor(broadcastSocket, _monitor) {
         status_code: err.response.status,
         response_time: getResponseTime(),
         is_failed: true,
+        response: err.response.data,
       });
       log({ id: 'monitor.js' }, `Monitor ${monitor.id} failed with status ${err.response.status}`);
       return;
@@ -284,6 +292,7 @@ async function runMonitor(broadcastSocket, _monitor) {
     await _update('monitors', { runned_at: timestamp, updated_at: timestamp, status }, 'id = ?', [monitor.id]);
     monitor.runned_at = timestamp;
     monitor.updated_at = timestamp;
+    monitor.status = status;
     broadcastSocket.emit('monitor-runned', {
       monitor_id: monitor.id,
       monitor: await fillMonitorData(monitor),
